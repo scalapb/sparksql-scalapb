@@ -36,11 +36,15 @@ releaseProcess := Seq[ReleaseStep](
 
 val scalaPbVersion = "0.5.22"
 
-val sparkVersion = "1.6.1"
+spName := "trueaccord/sparksql-scalapb"
+
+sparkVersion := "1.6.1"
+
+sparkComponents += "sql"
+
+spAppendScalaVersion := true
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-sql" % sparkVersion,
   "com.trueaccord.scalapb" %% "scalapb-runtime" % scalaPbVersion
 )
 
