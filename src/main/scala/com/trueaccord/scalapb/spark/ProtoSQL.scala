@@ -10,7 +10,7 @@ import org.apache.spark.sql.{Row, SQLContext}
 object ProtoSQL {
   import scala.language.existentials
 
-  def rddToDataFrame[T <: GeneratedMessage with Message[T]](sqlContext: SQLContext, protoRdd: org.apache.spark.rdd.RDD[T])(
+  def protoToDF[T <: GeneratedMessage with Message[T]](sqlContext: SQLContext, protoRdd: org.apache.spark.rdd.RDD[T])(
     implicit cmp: GeneratedMessageCompanion[T]) = {
     sqlContext.createDataFrame(protoRdd.map(messageToRow[T]), schemaFor[T])
   }
