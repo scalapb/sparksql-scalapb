@@ -4,21 +4,26 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.Descriptors.{EnumValueDescriptor, FieldDescriptor}
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
 import com.trueaccord.scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
-import org.apache.spark.sql.types.{StructField, StructType}
-import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
 
 object ProtoSQL {
   import scala.language.existentials
 
-  def protoToDF[T <: GeneratedMessage with Message[T]](sqlContext: SQLContext, protoRdd: org.apache.spark.rdd.RDD[T])(
-    implicit cmp: GeneratedMessageCompanion[T]) = {
-    sqlContext.createDataFrame(protoRdd.map(messageToRow[T]), schemaFor[T])
+  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](
+    sparkSession: SparkSession, protoRdd: org.apache.spark.rdd.RDD[T]): DataFrame = {
+    sparkSession.createDataFrame(protoRdd.map(messageToRow[T]), schemaFor[T])
+  }
+
+  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](
+    sqlContext: SQLContext, protoRdd: org.apache.spark.rdd.RDD[T]): DataFrame = {
+    protoToDataFrame(sqlContext.sparkSession, protoRdd)
   }
 
   def schemaFor[T <: GeneratedMessage with Message[T]](implicit cmp: GeneratedMessageCompanion[T]) = {
     import org.apache.spark.sql.types._
-    import collection.JavaConversions._
-    StructType(cmp.descriptor.getFields.map(structFieldFor))
+    import collection.JavaConverters._
+    StructType(cmp.descriptor.getFields.asScala.map(structFieldFor))
   }
 
   private def toRowData(fd: FieldDescriptor, obj: Any) = fd.getJavaType match {
@@ -29,13 +34,12 @@ object ProtoSQL {
   }
 
   def messageToRow[T <: GeneratedMessage with Message[T]](msg: T): Row = {
-    val allFields: Map[FieldDescriptor, Any] = msg.getAllFields
     import collection.JavaConversions._
     Row(
       msg.companion.descriptor.getFields.map {
         fd =>
-          if (allFields.containsKey(fd)) {
-            val obj = allFields(fd)
+          val obj = msg.getField(fd)
+          if (obj != null) {
             if (fd.isRepeated) {
               obj.asInstanceOf[Vector[Any]].map(toRowData(fd, _))
             } else {
@@ -58,8 +62,8 @@ object ProtoSQL {
       case BYTE_STRING => BinaryType
       case ENUM => StringType
       case MESSAGE =>
-        import collection.JavaConversions._
-        StructType(fd.getMessageType.getFields.map(structFieldFor))
+        import collection.JavaConverters._
+        StructType(fd.getMessageType.getFields.asScala.map(structFieldFor))
     }
     StructField(
       fd.getName,

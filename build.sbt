@@ -1,8 +1,8 @@
 import ReleaseTransformations._
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
-crossScalaVersions := Seq("2.11.7", "2.10.5")
+crossScalaVersions := Seq("2.11.8", "2.10.5")
 
 organization in ThisBuild := "com.trueaccord.scalapb"
 
@@ -34,11 +34,11 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
 )
 
-val scalaPbVersion = "0.5.22"
+val scalaPbVersion = "0.5.33"
 
 spName := "trueaccord/sparksql-scalapb"
 
-sparkVersion := "1.6.1"
+sparkVersion := "2.0.0"
 
 sparkComponents += "sql"
 
