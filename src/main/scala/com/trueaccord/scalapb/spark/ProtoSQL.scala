@@ -41,7 +41,7 @@ object ProtoSQL {
           val obj = msg.getField(fd)
           if (obj != null) {
             if (fd.isRepeated) {
-              obj.asInstanceOf[Vector[Any]].map(toRowData(fd, _))
+              obj.asInstanceOf[Traversable[Any]].map(toRowData(fd, _))
             } else {
               toRowData(fd, obj)
             }
