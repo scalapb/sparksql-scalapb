@@ -54,7 +54,7 @@ lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
     PB.targets in Compile := Seq(),
     PB.targets in Test := Seq(
       scalapb.gen() -> (sourceManaged in Test).value,
-      UDTGenerator -> (sourceManaged in Test).value
+      scalapb.UdtGenerator -> (sourceManaged in Test).value
     )
   )
 
