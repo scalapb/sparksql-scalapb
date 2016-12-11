@@ -1,11 +1,11 @@
 package com.trueaccord.scalapb.spark
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.Descriptors.{EnumValueDescriptor, FieldDescriptor}
+import com.google.protobuf.Descriptors.{ EnumValueDescriptor, FieldDescriptor }
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
-import com.trueaccord.scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
-import org.apache.spark.sql.types.StructField
-import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
+import com.trueaccord.scalapb.{ GeneratedMessage, GeneratedMessageCompanion, Message }
+import org.apache.spark.sql.types.{ ArrayType, StructField }
+import org.apache.spark.sql.{ DataFrame, Row, SQLContext, SparkSession }
 
 object ProtoSQL {
   import scala.language.existentials
@@ -49,10 +49,10 @@ object ProtoSQL {
       }: _*)
   }
 
-  private def structFieldFor(fd: FieldDescriptor): StructField = {
+  def dataTypeFor(fd: FieldDescriptor) = {
     import com.google.protobuf.Descriptors.FieldDescriptor.JavaType._
     import org.apache.spark.sql.types._
-    val dataType = fd.getJavaType match {
+    fd.getJavaType match {
       case INT => IntegerType
       case LONG => LongType
       case FLOAT => FloatType
@@ -65,6 +65,10 @@ object ProtoSQL {
         import collection.JavaConverters._
         StructType(fd.getMessageType.getFields.asScala.map(structFieldFor))
     }
+  }
+
+  def structFieldFor(fd: FieldDescriptor): StructField = {
+    val dataType = dataTypeFor(fd)
     StructField(
       fd.getName,
       if (fd.isRepeated) ArrayType(dataType, containsNull = false) else dataType,
