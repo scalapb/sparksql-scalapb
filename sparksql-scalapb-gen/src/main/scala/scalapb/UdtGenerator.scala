@@ -1,10 +1,12 @@
+package scalapb
+
 import com.google.protobuf.Descriptors._
 import com.google.protobuf.compiler.PluginProtos.{ CodeGeneratorRequest, CodeGeneratorResponse }
 
 import scala.collection.JavaConverters._
 import com.trueaccord.scalapb.compiler.{ DescriptorPimps, FunctionalPrinter, GeneratorParams }
 
-object UDTGenerator extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
+object UdtGenerator extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
   val params = GeneratorParams()
 
   def run(request: CodeGeneratorRequest): CodeGeneratorResponse = {

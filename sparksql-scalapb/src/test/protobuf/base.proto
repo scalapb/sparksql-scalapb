@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+option java_package = "com.example.protos";
+
+message Base {
+  enum Color {
+    BLUE = 1;
+    RED = 2;
+  }
+}

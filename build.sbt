@@ -49,6 +49,12 @@ lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
     libraryDependencies ++= Seq(
       "com.trueaccord.scalapb" %% "scalapb-runtime" % scalaPbVersion,
       "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    ),
+    inConfig(Test)(sbtprotoc.ProtocPlugin.protobufConfigSettings),
+    PB.targets in Compile := Seq(),
+    PB.targets in Test := Seq(
+      scalapb.gen() -> (sourceManaged in Test).value,
+      UDTGenerator -> (sourceManaged in Test).value
     )
   )
 
@@ -59,7 +65,8 @@ lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
       "com.trueaccord.scalapb" %% "protoc-bridge" % "0.2.5",
       "com.trueaccord.scalapb" %% "compilerplugin" % scalaPbVersion
     ),
-    name := "sparksql-scalapb-gen"
+    name := "sparksql-scalapb-gen",
+    PB.targets in Compile := Seq()
   )
 
 lazy val root =
