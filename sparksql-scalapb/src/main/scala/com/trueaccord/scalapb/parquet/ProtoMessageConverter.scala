@@ -15,7 +15,7 @@ class ProtoMessageConverter[T <: GeneratedMessage with Message[T]](cmp: Generate
 
   val converters = schema.getFields.asScala.map {
     t =>
-      val fd = cmp.descriptor.findFieldByName(t.getName)
+      val fd = cmp.javaDescriptor.findFieldByName(t.getName)
       val e: (Any) => Unit = if (fd.isRepeated) addValue(fd) else setValue(fd)
       fd.getJavaType match {
         case JavaType.MESSAGE =>

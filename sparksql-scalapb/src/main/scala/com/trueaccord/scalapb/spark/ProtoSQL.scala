@@ -23,7 +23,7 @@ object ProtoSQL {
   def schemaFor[T <: GeneratedMessage with Message[T]](implicit cmp: GeneratedMessageCompanion[T]) = {
     import org.apache.spark.sql.types._
     import collection.JavaConverters._
-    StructType(cmp.descriptor.getFields.asScala.map(structFieldFor))
+    StructType(cmp.javaDescriptor.getFields.asScala.map(structFieldFor))
   }
 
   private def toRowData(fd: FieldDescriptor, obj: Any) = fd.getJavaType match {
@@ -36,7 +36,7 @@ object ProtoSQL {
   def messageToRow[T <: GeneratedMessage with Message[T]](msg: T): Row = {
     import collection.JavaConversions._
     Row(
-      msg.companion.descriptor.getFields.map {
+      msg.companion.javaDescriptor.getFields.map {
         fd =>
           val obj = msg.getField(fd)
           if (obj != null) {

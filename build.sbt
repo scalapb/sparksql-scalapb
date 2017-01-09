@@ -32,7 +32,7 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
 )
 
-val scalaPbVersion = "0.5.45-p3"
+val scalaPbVersion = "0.5.47"
 
 lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
   .settings(
