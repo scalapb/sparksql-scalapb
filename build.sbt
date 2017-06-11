@@ -58,6 +58,8 @@ lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
     )
   )
 
+testOptions in Test += Tests.Argument("-oD")
+
 lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
   .disablePlugins(sbtsparkpackage.SparkPackagePlugin)
   .settings(

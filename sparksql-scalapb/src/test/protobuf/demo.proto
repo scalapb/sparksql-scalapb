@@ -22,4 +22,3 @@ message Person {
   repeated Address addresses = 5;
   optional Base base = 6;
 }
-
