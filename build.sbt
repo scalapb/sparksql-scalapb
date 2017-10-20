@@ -1,81 +1,65 @@
 import ReleaseTransformations._
 
-scalaVersion in ThisBuild := "2.11.8"
-
-crossScalaVersions in ThisBuild := Seq("2.11.8", "2.10.5")
-
 organization in ThisBuild := "com.trueaccord.scalapb"
 
-scalacOptions in ThisBuild ++= {
-  CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, v)) if v <= 11 => List("-target:jvm-1.7")
-    case _ => Nil
-  }
-}
+//releaseCrossBuild := true
+//
+//releasePublishArtifactsAction := PgpKeys.publishSigned.value
+//
+//releaseProcess := Seq[ReleaseStep](
+//  checkSnapshotDependencies,
+//  inquireVersions,
+//  runClean,
+//  runTest,
+//  setReleaseVersion,
+//  commitReleaseVersion,
+//  tagRelease,
+//  ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
+//  setNextVersion,
+//  commitNextVersion,
+//  pushChanges,
+//  ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
+//)
 
-releaseCrossBuild := true
+//testOptions in Test += Tests.Argument("-oD")
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
+val scalaPbVersion = "0.6.6"
 
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges,
-  ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
-)
+lazy val root = (project in file("."))
+  .aggregate(plugin, library)
+  .enablePlugins(CrossPerProjectPlugin)
 
-val scalaPbVersion = "0.5.47"
+lazy val plugin = (project in file("sparksql-scalapb-gen"))
+  .enablePlugins(BuildInfoPlugin)
+  .disablePlugins(sbtsparkpackage.SparkPackagePlugin)
+  .settings(scriptedSettings: _*)
+  .settings(
+    name := "sparksql-scalapb-gen",
+    sbtPlugin := true,
+    scalaVersion := "2.10.6",
+    libraryDependencies ++= Seq(
+      "com.trueaccord.scalapb" %% "protoc-bridge" % "0.3.0-M1",
+      "com.trueaccord.scalapb" %% "compilerplugin" % scalaPbVersion
+    ),
+    addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.12"),
+    scriptedLaunchOpts ++= Seq("-Dplugin.version=" + version.value),
+    scriptedBufferLog := false,
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "com.trueaccord.scalapb.sparksql.gen",
+    publishLocal := publishLocal.dependsOn(publishLocal in library).value
+  ).dependsOn(library)
 
-lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
+lazy val library = project.in(file("sparksql-scalapb"))
   .settings(
     name := "sparksql-scalapb",
-
     spName := "trueaccord/sparksql-scalapb",
-
-    sparkVersion := "2.0.2",
-
+    crossScalaVersions ++= Seq("2.11.11", "2.10.6"),
+    sparkVersion := "2.2.0",
     sparkComponents += "sql",
-
     spAppendScalaVersion := true,
-
     libraryDependencies ++= Seq(
       "com.trueaccord.scalapb" %% "scalapb-runtime" % scalaPbVersion,
-      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-    ),
-    inConfig(Test)(sbtprotoc.ProtocPlugin.protobufConfigSettings),
-    PB.targets in Compile := Seq(),
-    PB.targets in Test := Seq(
-      scalapb.gen() -> (sourceManaged in Test).value,
-      scalapb.UdtGenerator -> (sourceManaged in Test).value
+      "org.scalatest" %% "scalatest" % "3.0.4" % "test"
     )
   )
 
-testOptions in Test += Tests.Argument("-oD")
-
-lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
-  .disablePlugins(sbtsparkpackage.SparkPackagePlugin)
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.trueaccord.scalapb" %% "protoc-bridge" % "0.2.5",
-      "com.trueaccord.scalapb" %% "compilerplugin" % scalaPbVersion
-    ),
-    name := "sparksql-scalapb-gen",
-    PB.targets in Compile := Seq()
-  )
-
-lazy val root =
-  project.in(file("."))
-    .settings(
-      publishArtifact := false,
-      publish := {},
-      publishLocal := {}
-    ).aggregate(
-      sparkSqlScalaPB, udtGenerator)

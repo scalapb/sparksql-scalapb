@@ -1,15 +1,23 @@
 package scalapb
 
 import com.google.protobuf.Descriptors._
-import com.google.protobuf.compiler.PluginProtos.{ CodeGeneratorRequest, CodeGeneratorResponse }
+import com.google.protobuf.ExtensionRegistry
+import com.google.protobuf.compiler.PluginProtos.{CodeGeneratorRequest, CodeGeneratorResponse}
 
 import scala.collection.JavaConverters._
-import com.trueaccord.scalapb.compiler.{ DescriptorPimps, FunctionalPrinter, GeneratorParams }
+import com.trueaccord.scalapb.compiler.{DescriptorPimps, FunctionalPrinter, GeneratorParams}
+
+import scalapbshade.v0_6_6.com.trueaccord.scalapb.Scalapb
 
 class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
   val params = GeneratorParams(flatPackage = flatPackage)
 
-  def run(request: CodeGeneratorRequest): CodeGeneratorResponse = {
+
+  override def run(req: Array[Byte]): Array[Byte] = {
+    val registry = ExtensionRegistry.newInstance()
+    Scalapb.registerAllExtensions(registry)
+    val request = CodeGeneratorRequest.parseFrom(req, registry)
+
     val b = CodeGeneratorResponse.newBuilder
 
     val fileDescByName: Map[String, FileDescriptor] =
@@ -25,7 +33,7 @@ class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCode
         val responseFile = generateFile(fileDesc)
         b.addFile(responseFile)
     }
-    b.build
+    b.build.toByteArray
   }
 
   def allEnums(f: FileDescriptor): Seq[EnumDescriptor] = {
