@@ -1,2 +1,7 @@
+> compile
+#$ pause
+> test:compile
+#$ pause
 # test succeeds
 > test
+#$ pause

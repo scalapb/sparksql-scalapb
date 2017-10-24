@@ -1,6 +1,6 @@
 package com.trueaccord.scalapb
 
-import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SQLContext, SparkSession}
 
 import scala.reflect.ClassTag
 

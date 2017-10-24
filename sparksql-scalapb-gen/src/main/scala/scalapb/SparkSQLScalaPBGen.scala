@@ -25,7 +25,8 @@ object SparkSQLScalaPBPlugin extends AutoPlugin {
     libraryDependencies += "com.trueaccord.scalapb" %% "sparksql-scalapb" % com.trueaccord.scalapb.sparksql.gen.BuildInfo.version,
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value,
-      new scalapb.UdtGenerator -> (sourceManaged in Compile).value
+      new scalapb.UdtGenerator -> (sourceManaged in Compile).value,
+      new scalapb.SqlSourceGenerator -> (sourceManaged in Compile).value
     )
   )
 

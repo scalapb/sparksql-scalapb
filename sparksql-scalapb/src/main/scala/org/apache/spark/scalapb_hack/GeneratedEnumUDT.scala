@@ -20,4 +20,8 @@ object GeneratedEnumUDT {
   def register(a: String, b: String) = {
     UDTRegistration.register(a, b)
   }
+  def getUDTFor(className: String) = {
+    println(className)
+    UDTRegistration.getUDTFor(className)
+  }
 }

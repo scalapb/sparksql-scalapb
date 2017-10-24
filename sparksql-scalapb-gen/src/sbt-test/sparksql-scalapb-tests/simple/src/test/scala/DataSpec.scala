@@ -1,6 +1,9 @@
 
+import java.io.{File, FileOutputStream}
+
 import com.example.protos.base.Base
 import com.example.protos.demo.{Address, DemoProtoUdt, Gender, Person}
+import org.apache.hadoop.fs.FileUtil
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
 import org.apache.spark.sql.functions.udf
@@ -75,5 +78,22 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
       _.age := 35,
       _.gender := Gender.MALE
     ))
+  }
+
+  "Dataset[Person" should "be loadable into a Dataframe" in {
+    import com.trueaccord.scalapb.spark._
+    
+  }
+  "Dataset[Person]" should "roundtrip" in {
+    val f = FileUtil.createLocalTempFile(new File(""),"testPersonProtoFile", true)
+    val os = new FileOutputStream(f)
+    Seq(TestPerson).foreach(_.writeDelimitedTo(os))
+    os.close()
+    println(f.getAbsolutePath)
+    val ds = spark.read.format("com.example.protos.demo.PersonProtoSource").load(f.getAbsolutePath)
+    ds.where($"age" > 30).count() must be(1)
+    ds.where($"age" > 40).count() must be(0)
+    ds.where(GenderToString($"gender") === "MALE").count() must be(1)
+    ds.as[Person].collect() must be (Array(TestPerson))
   }
 }
