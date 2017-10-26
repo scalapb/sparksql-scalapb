@@ -17,14 +17,14 @@ edit `project/plugins.sbt` to include:
 
     addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.12")
     libraryDependencies += "com.trueaccord.scalapb" %% "compilerplugin" % "0.6.6"
-    libraryDependencies += ("com.trueaccord.scalapb" %% "sparksql-scalapb-gen" % [version]
+    libraryDependencies += "com.trueaccord.scalapb" %% "sparksql-scalapb-gen" % [this project version]
 
 edit `build.sbt` to include:
 
     libraryDependencies += "org.apache.spark" %% "spark-core" % "2.2.0"
     libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.0"
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
-    libraryDependencies += ("com.trueaccord.scalapb" %% "sparksql-scalapb" % pluginVersion)
+    libraryDependencies += "com.trueaccord.scalapb" %% "sparksql-scalapb" % [this project version]
        
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value,
