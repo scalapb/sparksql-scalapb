@@ -17,4 +17,4 @@ project/plugins/project/
 .worksheet
 .idea
 *.ipr
-*.wis
+*.iws
