@@ -21,16 +21,16 @@ edit `project/plugins.sbt` to include:
 
 edit `build.sbt` to include:
 
-     libraryDependencies += "org.apache.spark" %% "spark-core" % "2.2.0"
-     libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.0"
-     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
-     libraryDependencies += ("com.trueaccord.scalapb" %% "sparksql-scalapb" % pluginVersion)
+    libraryDependencies += "org.apache.spark" %% "spark-core" % "2.2.0"
+    libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.2.0"
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
+    libraryDependencies += ("com.trueaccord.scalapb" %% "sparksql-scalapb" % pluginVersion)
        
-     PB.targets in Compile := Seq(
-       scalapb.gen() -> (sourceManaged in Compile).value,
-       new scalapb.UdtGenerator -> (sourceManaged in Compile).value,
-       new scalapb.SqlSourceGenerator -> (sourceManaged in Compile).value
-     )
+    PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value,
+      new scalapb.UdtGenerator -> (sourceManaged in Compile).value,
+      new scalapb.SqlSourceGenerator -> (sourceManaged in Compile).value
+    )
 
 ## Testing
 From the SBT shell, run:
