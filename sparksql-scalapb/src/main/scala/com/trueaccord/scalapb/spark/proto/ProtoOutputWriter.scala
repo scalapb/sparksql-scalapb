@@ -31,15 +31,11 @@ private[proto] class ProtoOutputWriter[T <: GeneratedMessage with Message[T]](
 
   private var internalConverter: Row => InternalRow = CatalystTypeConverters.createToScalaConverter(dataSchema).asInstanceOf[Row => InternalRow]
 
-  override def write(row: Row): Unit = {
-    throw new NotImplementedError("This function only gets called by writeInternal, until spark 2.2.0")
+  override def write(row: InternalRow): Unit = {
+    encoder.fromRow(row).writeDelimitedTo(writer)
   }
 
   override def close(): Unit = {
     writer.close()
-  }
-
-  override def writeInternal(row: InternalRow): Unit = {
-    encoder.fromRow(row).writeDelimitedTo(writer)
   }
 }
