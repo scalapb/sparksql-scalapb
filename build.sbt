@@ -1,4 +1,5 @@
 import ReleaseTransformations._
+import sbtsparkpackage.SparkPackagePlugin.autoImport.sparkVersion
 
 organization in ThisBuild := "com.trueaccord.scalapb"
 
@@ -48,6 +49,7 @@ lazy val plugin = (project in file("sparksql-scalapb-gen"))
     buildInfoPackage := "com.trueaccord.scalapb.sparksql.gen",
     publishLocal := publishLocal.dependsOn(publishLocal in library).value
   ).dependsOn(library)
+
 
 lazy val library = project.in(file("sparksql-scalapb"))
   .settings(

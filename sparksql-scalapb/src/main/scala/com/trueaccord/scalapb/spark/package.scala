@@ -1,12 +1,13 @@
 package com.trueaccord.scalapb
 
-import org.apache.spark.sql.{DataFrame, Dataset, SQLContext, SparkSession}
+import org.apache.spark.sql._
 
 import scala.reflect.ClassTag
 
 package object spark {
   implicit class ProtoSQLContext(val sqlContext: SQLContext) extends AnyVal {
-    def protoToDataFrame[T <: GeneratedMessage with Message[T]](protoRdd: org.apache.spark.rdd.RDD[T])(
+    @deprecated("Please use sparkContext.createDataset()", "sparksql-scalapb 1.9")
+    def protoToDataFrame[T <: GeneratedMessage with Message[T] : Encoder](protoRdd: org.apache.spark.rdd.RDD[T])(
       implicit cmp: GeneratedMessageCompanion[T]) = {
       ProtoSQL.protoToDataFrame(sqlContext, protoRdd)
     }
@@ -17,11 +18,12 @@ package object spark {
       ProtoParquet.saveParquet(protoRdd, path)
     }
 
-    def toDataFrame(sqlContext: SQLContext)(implicit cmp: GeneratedMessageCompanion[T]): DataFrame = {
+    @deprecated("Please use sparkContext.createDataset().toDF", "sparksql-scalapb 1.9")
+    def toDataFrame(sqlContext: SQLContext)(implicit cmp: GeneratedMessageCompanion[T], encoder: Encoder[T]): DataFrame = {
       ProtoSQL.protoToDataFrame(sqlContext, protoRdd)
     }
-
-    def toDataFrame(sparkSession: SparkSession)(implicit cmp: GeneratedMessageCompanion[T]): DataFrame = {
+    @deprecated("Please use sparkSession.createDataset().toDF", "sparksql-scalapb 1.9")
+    def toDataFrame(sparkSession: SparkSession)(implicit cmp: GeneratedMessageCompanion[T], encoder: Encoder[T]): DataFrame = {
       ProtoSQL.protoToDataFrame(sparkSession, protoRdd)
     }
   }

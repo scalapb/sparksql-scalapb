@@ -4,22 +4,26 @@ import com.google.protobuf.ByteString
 import com.google.protobuf.Descriptors.{EnumValueDescriptor, FieldDescriptor}
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
 import com.trueaccord.scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
-
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
+import org.apache.spark.sql._
 
 object ProtoSQL {
   import scala.language.existentials
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](
+  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion : Encoder](
     sparkSession: SparkSession, protoRdd: org.apache.spark.rdd.RDD[T]): DataFrame = {
-    sparkSession.createDataFrame(protoRdd.map(messageToRow[T]), schemaFor[T])
+    import sparkSession.implicits._
+    sparkSession.createDataset[T](protoRdd).toDF
   }
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](
+  def protoToDataFrame[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion : Encoder](
     sqlContext: SQLContext, protoRdd: org.apache.spark.rdd.RDD[T]): DataFrame = {
-    protoToDataFrame(sqlContext.sparkSession, protoRdd)
+    import sqlContext.sparkSession.implicits._
+    sqlContext.createDataset[T](protoRdd).toDF
   }
+
+
+  /* ALL BELOW SHOULD BE REMOVED AFTER REMOVING CUSTOM PARQUET SUPPORT */
 
   def schemaFor[T <: GeneratedMessage with Message[T]](implicit cmp: GeneratedMessageCompanion[T]) = {
     import org.apache.spark.sql.types._

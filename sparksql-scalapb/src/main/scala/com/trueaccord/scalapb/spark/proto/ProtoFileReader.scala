@@ -23,7 +23,7 @@ import scala.reflect.runtime.universe._
   * This code is copyright (C) 2017 ljacobsen
   *
   */
-class HadoopFileProtoReader[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](file: PartitionedFile, conf: Configuration) extends Iterator[T] with Closeable with Serializable {
+class ProtoFileReader[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion](file: PartitionedFile, conf: Configuration) extends Iterator[T] with Closeable with Serializable {
   private var reader: RecordReader[LongWritable,T]= _
   private val iterator = {
     val fileSplit = new FileSplit(new Path(new URI(file.filePath)),file.start,file.length,Array.empty)

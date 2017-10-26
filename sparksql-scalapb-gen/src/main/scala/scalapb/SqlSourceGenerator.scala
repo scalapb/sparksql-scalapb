@@ -42,7 +42,7 @@ class SqlSourceGenerator(flatPackage: Boolean = false) extends protocbridge.Prot
     val fp = FunctionalPrinter()
       .add(s"package ${fileDesc.scalaPackageName}")
       .add("")
-      .print(fileDesc.getMessageTypes.asScala)((fp, m) => fp.add(s"""class ${m.nameSymbol}ProtoSource extends _root_.com.trueaccord.scalapb.spark.proto.DefaultSource[${fileDesc.scalaPackageName}.${m.nameSymbol}](${fileDesc.scalaPackageName}.${m.nameSymbol}) { override def shortName = "${fileDesc.scalaPackageName}.${m.nameSymbol}" }"""))
+      .print(fileDesc.getMessageTypes.asScala)((fp, m) => fp.add(s"""class ${m.nameSymbol}ProtoSource extends _root_.com.trueaccord.scalapb.spark.proto.DefaultSource[${fileDesc.scalaPackageName}.${m.nameSymbol}] { override def shortName = "${fileDesc.scalaPackageName}.${m.nameSymbol}" }"""))
       b.setContent(fp.result)
       b.build
   }

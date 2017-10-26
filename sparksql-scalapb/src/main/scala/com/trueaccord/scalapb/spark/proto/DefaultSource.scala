@@ -6,7 +6,7 @@ import com.trueaccord.scalapb.spark.ProtoSQL
 import com.trueaccord.scalapb.{GeneratedMessage, Message}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, Path}
-import org.apache.hadoop.mapreduce.Job
+import org.apache.hadoop.mapreduce.{Job, TaskAttemptContext}
 import org.apache.spark.TaskContext
 import org.apache.spark.sql.{Encoders, SparkSession}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -24,6 +24,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.GenerateUnsafeProjectio
 
 import scala.reflect.ClassTag
 import org.apache.spark.sql.catalyst.encoders._
+import org.apache.spark.sql.internal.SessionState
 
 /**
   * Created 10/20/17 3:40 AM
@@ -33,11 +34,11 @@ import org.apache.spark.sql.catalyst.encoders._
   *
   */
 
-abstract class DefaultSource[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion : ClassTag : TypeTag](companion: GeneratedMessageCompanion[T]) extends FileFormat
+abstract class DefaultSource[T <: GeneratedMessage with Message[T] : GeneratedMessageCompanion : ClassTag : TypeTag] extends FileFormat
   with DataSourceRegister
   with Serializable {
 
-  val encoder = ExpressionEncoder[T]
+  val encoder = ExpressionEncoder[T].resolveAndBind()
 
   override def equals(other: Any): Boolean = other match {
     case _: DefaultSource[T] => true
@@ -69,7 +70,7 @@ abstract class DefaultSource[T <: GeneratedMessage with Message[T] : GeneratedMe
   {
     val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
     (file: PartitionedFile) => {
-      val reader = new HadoopFileProtoReader[T](file, broadcastedHadoopConf.value.value)
+      val reader = new ProtoFileReader[T](file, broadcastedHadoopConf.value.value)
       Option(TaskContext.get()).foreach(_.addTaskCompletionListener(_ => reader.close()))
 
       val fullOutput = dataSchema.map { f =>
@@ -84,8 +85,18 @@ abstract class DefaultSource[T <: GeneratedMessage with Message[T] : GeneratedMe
     }
   }
 
-  override def prepareWrite(sparkSession: SparkSession, job: Job, options: Map[String, String], dataSchema: StructType): OutputWriterFactory = throw new UnsupportedOperationException("Write is not supported in this version of package")
+  override def prepareWrite(sparkSession: SparkSession, job: Job, options: Map[String, String], dataSchema: StructType): OutputWriterFactory = {
+    require(dataSchema == encoder.schema, "The Data Schema and Type schema must match")
+    new OutputWriterFactory {
+      override def newInstance(path: String, dataSchema: StructType, context: TaskAttemptContext): OutputWriter = {
+        new ProtoOutputWriter[T](path, dataSchema, context, encoder)
+      }
 
+      override def getFileExtension(context: TaskAttemptContext): String = {
+        ".pb" + CodecStreams.getCompressionExtension(context)
+      }
+    }
+  }
 
 }
 

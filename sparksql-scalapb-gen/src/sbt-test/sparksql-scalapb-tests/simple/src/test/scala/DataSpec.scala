@@ -8,6 +8,8 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
 import org.apache.spark.sql.functions.udf
 
+import scala.util.control.NonFatal
+
 case class PersonLike(
   name: String, age: Int, addresses: Seq[Address], gender: Gender,
   tags: Seq[String] = Seq.empty, base: Option[Base] = None)
@@ -86,14 +88,18 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
   }
   "Dataset[Person]" should "roundtrip" in {
     val f = FileUtil.createLocalTempFile(new File(""),"testPersonProtoFile", true)
-    val os = new FileOutputStream(f)
-    Seq(TestPerson).foreach(_.writeDelimitedTo(os))
-    os.close()
-    println(f.getAbsolutePath)
-    val ds = spark.read.format("com.example.protos.demo.PersonProtoSource").load(f.getAbsolutePath)
-    ds.where($"age" > 30).count() must be(1)
-    ds.where($"age" > 40).count() must be(0)
-    ds.where(GenderToString($"gender") === "MALE").count() must be(1)
-    ds.as[Person].collect() must be (Array(TestPerson))
+    try {
+      f.delete()
+      println(f.getAbsolutePath)
+      spark.createDataset(Seq(TestPerson)).write.format("com.example.protos.demo.PersonProtoSource").save(f.getAbsolutePath)
+      val ds = spark.read.format("com.example.protos.demo.PersonProtoSource").load(f.getAbsolutePath)
+      ds.where($"age" > 30).count() must be(1)
+      ds.where($"age" > 40).count() must be(0)
+      ds.where(GenderToString($"gender") === "MALE").count() must be(1)
+      ds.as[Person].collect() must be(Array(TestPerson))
+      ds.as[Person].foreach(println(_))
+    } finally {
+      try { f.delete() } catch { case NonFatal(_) => {} }
+    }
   }
 }
