@@ -4,7 +4,7 @@ This library provides utilities to work with ScalaPB in SparkSQL.
 
 Adapted from: https://github.com/saurfang/sparksql-protobuf
 
-__ This library only supports Spark 2.2.0+ due to interface changes in Spark from version 2.1 to 2.2.  If you need to support Spark 2.1 or lower, please use a version 1.8 of this project. __
+_This library only supports Spark 2.2.0+ due to interface changes in Spark from version 2.1 to 2.2.  If you need to support Spark 2.1 or lower, please use a version 1.8 of this project._
 
 ## Features
 * reading and saving delimeted protobuf files to/from a spark sql dataframe
