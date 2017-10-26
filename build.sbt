@@ -3,26 +3,26 @@ import sbtsparkpackage.SparkPackagePlugin.autoImport.sparkVersion
 
 organization in ThisBuild := "com.trueaccord.scalapb"
 
-//releaseCrossBuild := true
-//
-//releasePublishArtifactsAction := PgpKeys.publishSigned.value
-//
-//releaseProcess := Seq[ReleaseStep](
-//  checkSnapshotDependencies,
-//  inquireVersions,
-//  runClean,
-//  runTest,
-//  setReleaseVersion,
-//  commitReleaseVersion,
-//  tagRelease,
-//  ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
-//  setNextVersion,
-//  commitNextVersion,
-//  pushChanges,
-//  ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
-//)
+releaseCrossBuild := true
 
-//testOptions in Test += Tests.Argument("-oD")
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges,
+  ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
+)
+
+testOptions in Test += Tests.Argument("-oD")
 
 val scalaPbVersion = "0.6.6"
 
