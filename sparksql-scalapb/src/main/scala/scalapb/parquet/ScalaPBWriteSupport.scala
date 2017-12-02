@@ -1,9 +1,9 @@
-package com.trueaccord.scalapb.parquet
+package scalapb.parquet
 
 import java.util
 
 import com.google.protobuf.Descriptors.Descriptor
-import com.trueaccord.scalapb.{GeneratedMessage, Message}
+import scalapb.{GeneratedMessage, Message}
 import org.apache.hadoop.conf.Configuration
 import org.apache.parquet.hadoop.BadConfigurationException
 import org.apache.parquet.hadoop.api.WriteSupport

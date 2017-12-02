@@ -1,7 +1,7 @@
-package com.trueaccord.scalapb.spark
+package scalapb.spark
 
-import com.trueaccord.scalapb.parquet.{ScalaPBInputFormat, ScalaPBOutputFormat, ScalaPBWriteSupport}
-import com.trueaccord.scalapb.{GeneratedMessage, Message}
+import scalapb.parquet.{ScalaPBInputFormat, ScalaPBOutputFormat, ScalaPBWriteSupport}
+import scalapb.{GeneratedMessage, Message}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession

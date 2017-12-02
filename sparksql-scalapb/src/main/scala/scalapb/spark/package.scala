@@ -1,4 +1,4 @@
-package com.trueaccord.scalapb
+package scalapb
 
 import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
 

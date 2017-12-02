@@ -1,6 +1,6 @@
 package org.apache.spark.scalapb_hack
 
-import com.trueaccord.scalapb.{ GeneratedEnum, GeneratedEnumCompanion }
+import scalapb.{ GeneratedEnum, GeneratedEnumCompanion }
 import org.apache.spark.sql.types.{ DataType, StringType, UDTRegistration, UserDefinedType }
 import org.apache.spark.unsafe.types.UTF8String
 

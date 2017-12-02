@@ -1,9 +1,9 @@
-package com.trueaccord.scalapb.parquet
+package scalapb.parquet
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
 import com.google.protobuf.Descriptors.{EnumValueDescriptor, FieldDescriptor}
-import com.trueaccord.scalapb.{GeneratedMessage, Message}
+import scalapb.{GeneratedMessage, Message}
 import org.apache.parquet.io.api.Binary
 import org.apache.parquet.Log
 import org.apache.parquet.io.api.RecordConsumer

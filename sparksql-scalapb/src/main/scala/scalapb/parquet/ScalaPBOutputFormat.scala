@@ -1,6 +1,6 @@
-package com.trueaccord.scalapb.parquet
+package scalapb.parquet
 
-import com.trueaccord.scalapb.{GeneratedMessage, Message}
+import scalapb.{GeneratedMessage, Message}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.parquet.hadoop.ParquetOutputFormat
 import org.apache.parquet.hadoop.util.ContextUtil

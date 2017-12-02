@@ -1,9 +1,9 @@
-package com.trueaccord.scalapb.spark
+package scalapb.spark
 
 import com.google.protobuf.ByteString
 import com.google.protobuf.Descriptors.{ EnumValueDescriptor, FieldDescriptor }
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
-import com.trueaccord.scalapb.{ GeneratedMessage, GeneratedMessageCompanion, Message }
+import scalapb.{ GeneratedMessage, GeneratedMessageCompanion, Message }
 import org.apache.spark.sql.types.{ ArrayType, StructField }
 import org.apache.spark.sql.{ DataFrame, Row, SQLContext, SparkSession }
 

@@ -1,7 +1,7 @@
-sonatypeProfileName := "com.trueaccord"
+sonatypeProfileName := "com.thesamet"
 
 pomExtra in Global := {
-  <url>https://github.com/trueaccord/sparksql-scalapb</url>
+  <url>https://github.com/scalapb/sparksql-scalapb</url>
   <licenses>
     <license>
       <name>Apache 2</name>
@@ -9,9 +9,9 @@ pomExtra in Global := {
     </license>
   </licenses>
   <scm>
-    <connection>scm:git:github.com:trueaccord/sparksql-scalapb.git</connection>
-    <developerConnection>scm:git:git@github.com:trueaccord/sparksql-scalapb.git</developerConnection>
-    <url>github.com/trueaccord/sparksql-scalapb</url>
+    <connection>scm:git:github.com:scalapb/sparksql-scalapb.git</connection>
+    <developerConnection>scm:git:git@github.com:scalapb/sparksql-scalapb.git</developerConnection>
+    <url>github.com/scalapb/sparksql-scalapb</url>
   </scm>
   <developers>
     <developer>

@@ -4,7 +4,7 @@ import com.google.protobuf.Descriptors._
 import com.google.protobuf.compiler.PluginProtos.{ CodeGeneratorRequest, CodeGeneratorResponse }
 
 import scala.collection.JavaConverters._
-import com.trueaccord.scalapb.compiler.{ DescriptorPimps, FunctionalPrinter, GeneratorParams }
+import scalapb.compiler.{ DescriptorPimps, FunctionalPrinter, GeneratorParams }
 
 class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
   val params = GeneratorParams(flatPackage = flatPackage)

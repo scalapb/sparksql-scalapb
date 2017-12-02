@@ -1,4 +1,4 @@
-package com.trueaccord.scalapb.parquet
+package scalapb.parquet
 
 import com.google.protobuf.Descriptors.{ Descriptor, FieldDescriptor }
 import org.apache.parquet.schema.Types.{ Builder, GroupBuilder, MessageTypeBuilder, PrimitiveBuilder }
