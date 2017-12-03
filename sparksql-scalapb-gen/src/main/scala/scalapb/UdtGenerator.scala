@@ -1,17 +1,20 @@
 package scalapb
 
 import com.google.protobuf.Descriptors._
-import com.google.protobuf.compiler.PluginProtos.{ CodeGeneratorRequest, CodeGeneratorResponse }
+import com.google.protobuf.ExtensionRegistry
+import com.google.protobuf.compiler.PluginProtos.{CodeGeneratorRequest, CodeGeneratorResponse}
 
 import scala.collection.JavaConverters._
-import scalapb.compiler.{ DescriptorPimps, FunctionalPrinter, GeneratorParams }
+import scalapb.compiler.{DescriptorPimps, FunctionalPrinter, GeneratorParams}
+import scalapb.options.compiler.Scalapb
 
-class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCodeGenerator with DescriptorPimps {
-  val params = GeneratorParams(flatPackage = flatPackage)
 
-  def run(request: CodeGeneratorRequest): CodeGeneratorResponse = {
-    val b = CodeGeneratorResponse.newBuilder
+class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = false) extends DescriptorPimps {
+  val params = GeneratorParams(
+    flatPackage = flatPackage ||
+      request.getParameter.split(",").contains("flat_package"))
 
+  def generate: CodeGeneratorResponse = {
     val fileDescByName: Map[String, FileDescriptor] =
       request.getProtoFileList.asScala.foldLeft[Map[String, FileDescriptor]](Map.empty) {
         case (acc, fp) =>
@@ -19,13 +22,15 @@ class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCode
           acc + (fp.getName -> FileDescriptor.buildFrom(fp, deps.toArray))
       }
 
+    val b = CodeGeneratorResponse.newBuilder
+
     request.getFileToGenerateList.asScala.foreach {
       name =>
         val fileDesc = fileDescByName(name)
         val responseFile = generateFile(fileDesc)
         b.addFile(responseFile)
     }
-    b.build
+    b.build()
   }
 
   def allEnums(f: FileDescriptor): Seq[EnumDescriptor] = {
@@ -63,7 +68,19 @@ class UdtGenerator(flatPackage: Boolean = false) extends protocbridge.ProtocCode
       .outdent
       .add("}")
 
-      b.setContent(fp.result)
-      b.build
+    b.setContent(fp.result)
+    b.build
   }
 }
+
+class UdtGenerator(flatPackage: Boolean) extends protocbridge.ProtocCodeGenerator {
+  def run(requestBytes: Array[Byte]): Array[Byte] = {
+    val registry = ExtensionRegistry.newInstance()
+    Scalapb.registerAllExtensions(registry)
+    val request = CodeGeneratorRequest.parseFrom(requestBytes, registry)
+    new UdtGeneratorHandler(request, flatPackage).generate.toByteArray
+  }
+
+}
+
+object UdtGenerator extends UdtGenerator(flatPackage = false)

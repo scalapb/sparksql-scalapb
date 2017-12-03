@@ -13,6 +13,13 @@ scalacOptions in ThisBuild ++= {
   }
 }
 
+publishTo in ThisBuild := Some(
+  if (isSnapshot.value)
+    Opts.resolver.sonatypeSnapshots
+  else
+    Opts.resolver.sonatypeStaging
+)
+
 releaseCrossBuild := true
 
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
@@ -32,7 +39,7 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
 )
 
-val scalaPbVersion = "0.7.0-rc1"
+val scalaPbVersion = "0.7.0-rc4"
 
 lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
   .settings(
