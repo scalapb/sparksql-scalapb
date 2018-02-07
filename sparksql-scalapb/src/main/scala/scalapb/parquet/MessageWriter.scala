@@ -18,19 +18,29 @@ object MessageWriter {
   }
 
   private def writeAllFields[T <: GeneratedMessage](consumer: RecordConsumer, m: T): Unit = {
-    m.getAllFields.foreach {
-      case (fd, value) =>
-        consumer.startField(fd.getName, fd.getIndex)
-        if (fd.isRepeated) {
-          value.asInstanceOf[Seq[Any]].foreach {
-            v =>
-              writeSingleField(consumer, fd, v)
+
+    m.getAllFields
+      .foreach {
+        case (fd, value) =>
+          consumer.startField(fd.getName, fd.getIndex)
+          if (fd.isRepeated) {
+            consumer.startGroup()
+            consumer.startField("list", 0)
+            value.asInstanceOf[Seq[Any]].foreach {
+              v =>
+                consumer.startGroup()
+                consumer.startField("element", 0)
+                writeSingleField(consumer, fd, v)
+                consumer.endField("element", 0)
+                consumer.endGroup()
+            }
+            consumer.endField("list", 0)
+            consumer.endGroup()
+          } else {
+            writeSingleField(consumer, fd, value)
           }
-        } else {
-          writeSingleField(consumer, fd, value)
-        }
-        consumer.endField(fd.getName, fd.getIndex)
-    }
+          consumer.endField(fd.getName, fd.getIndex)
+      }
   }
 
   private def writeSingleField(consumer: RecordConsumer, fd: FieldDescriptor, v: Any) = fd.getJavaType match {
