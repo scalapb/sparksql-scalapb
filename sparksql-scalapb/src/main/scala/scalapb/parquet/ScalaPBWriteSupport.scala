@@ -11,8 +11,8 @@ import org.apache.parquet.hadoop.api.WriteSupport.WriteContext
 import org.apache.parquet.io.api.RecordConsumer
 import org.apache.parquet.schema.MessageType
 
-class ScalaPBWriteSupport[T <: GeneratedMessage with Message[T]] extends WriteSupport[T] {
-  var pbClass: Class[T] = null
+class ScalaPBWriteSupport[T <: GeneratedMessage with Message[T]](implicit ct: reflect.ClassTag[T] = null) extends WriteSupport[T] {
+  var pbClass: Class[T] = Option(ct).map(_.runtimeClass.asInstanceOf[Class[T]]).orNull
   var recordConsumer: RecordConsumer = null
 
   override def init(configuration: Configuration): WriteContext = {
