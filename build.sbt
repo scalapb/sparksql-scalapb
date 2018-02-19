@@ -1,4 +1,6 @@
 import ReleaseTransformations._
+import scalapb.compiler.Version.scalapbVersion
+
 
 scalaVersion in ThisBuild := "2.11.8"
 
@@ -39,8 +41,6 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
 )
 
-val scalaPbVersion = "0.7.0-rc4"
-
 lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
   .settings(
     name := "sparksql-scalapb",
@@ -54,7 +54,7 @@ lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
     spAppendScalaVersion := true,
 
     libraryDependencies ++= Seq(
-      "com.thesamet.scalapb" %% "scalapb-runtime" % scalaPbVersion,
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
       "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     ),
     inConfig(Test)(sbtprotoc.ProtocPlugin.protobufConfigSettings),
@@ -71,8 +71,8 @@ lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
   .disablePlugins(sbtsparkpackage.SparkPackagePlugin)
   .settings(
     libraryDependencies ++= Seq(
-      "com.thesamet.scalapb" %% "protoc-bridge" % "0.7.0",
-      "com.thesamet.scalapb" %% "compilerplugin" % scalaPbVersion
+      "com.thesamet.scalapb" %% "protoc-bridge" % "0.7.2",
+      "com.thesamet.scalapb" %% "compilerplugin" % scalapbVersion
     ),
     name := "sparksql-scalapb-gen",
     PB.targets in Compile := Seq()
