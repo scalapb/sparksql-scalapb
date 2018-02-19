@@ -55,14 +55,14 @@ object SchemaConverter {
     (Option(originalType), repetition) match {
       case (None, Type.Repetition.REPEATED) =>
         builder
-          .group(Type.Repetition.REQUIRED).as(OriginalType.LIST)
+          .group(Type.Repetition.OPTIONAL).as(OriginalType.LIST)
           .group(Type.Repetition.REPEATED)
           .primitive(primitiveType,Type.Repetition.REQUIRED)
           .named("element")
           .named("list")
       case (Some(oType), Type.Repetition.REPEATED) =>
         builder
-          .group(Type.Repetition.REQUIRED).as(OriginalType.LIST)
+          .group(Type.Repetition.OPTIONAL).as(OriginalType.LIST)
           .group(Type.Repetition.REPEATED)
           .primitive(primitiveType,Type.Repetition.REQUIRED).as(oType)
           .named("element")
