@@ -1,0 +1,16 @@
+language: scala
+sudo: false
+
+scala:
+- 2.11.12
+- 2.12.7
+
+script:
+- sbt ++$TRAVIS_SCALA_VERSION sparkSqlScalaPB/test
+
+jobs:
+  include:
+    - name: "UDT generator"
+      scala: 2.12
+      script:
+      - sbt sparkSqlScalaPB/publishLocal udtGenerator/scripted
