@@ -3,9 +3,10 @@ package scalapb.parquet
 import com.google.protobuf.ByteString
 import com.google.protobuf.Descriptors.FieldDescriptor
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
+
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
 import org.apache.parquet.io.api.{Binary, Converter, GroupConverter, PrimitiveConverter}
-import org.apache.parquet.schema.GroupType
+import org.apache.parquet.schema.{GroupType, IncompatibleSchemaModificationException}
 
 import scala.collection.JavaConverters._
 import scala.language.existentials
@@ -16,6 +17,13 @@ class ProtoMessageConverter[T <: GeneratedMessage with Message[T]](cmp: Generate
   val converters = schema.getFields.asScala.map {
     t =>
       val fd = cmp.javaDescriptor.findFieldByName(t.getName)
+      require(fd != null,
+        s"""
+          |Cant find "${t.getName}" Scheme mismatch
+          |"$t"
+          |proto descriptor:
+          |${cmp.javaDescriptor.toProto}
+        """.stripMargin)
       val e: (Any) => Unit = if (fd.isRepeated) addValue(fd) else setValue(fd)
       fd.getJavaType match {
         case JavaType.MESSAGE =>
