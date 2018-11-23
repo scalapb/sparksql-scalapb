@@ -13,4 +13,4 @@ jobs:
     - name: "UDT generator"
       scala: 2.12
       script:
-      - sbt sparkSqlScalaPB/publishLocal udtGenerator/scripted
+      - ./test_udt_gen.sh
