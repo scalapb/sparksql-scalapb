@@ -1,6 +1,10 @@
 language: scala
 sudo: false
 
+# spark versions <=2.4 is only compatible with jdk8
+jdk:
+- openjdk8
+
 scala:
 - 2.11.12
 - 2.12.7
