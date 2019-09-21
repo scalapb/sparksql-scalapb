@@ -1,9 +1,10 @@
 
 import com.example.protos.base.Base
-import com.example.protos.demo.{Address, DemoProtoUdt, Gender, Person}
+import com.example.protos.demo.{Address, Defaults, DemoProtoUdt, Gender, Person}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
 import org.apache.spark.sql.functions.udf
+import scalapb.spark.ProtoSQL
 
 case class PersonLike(
   name: String, age: Int, addresses: Seq[Address], gender: Gender,
@@ -75,5 +76,13 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
       _.age := 35,
       _.gender := Gender.MALE
     ))
+  }
+
+  "RDD[Defaults]" should "have non-null default values after converting to Dataframe" in {
+    val defaults = Defaults.defaultInstance
+    val row = ProtoSQL.messageToRow(defaults)
+    row must be(
+      Row(defaults.i32Value, defaults.i64Value, defaults.u32Value, defaults.u64Value, defaults.dValue, defaults.fValue, defaults.bValue, defaults.sValue, defaults.binaryValue.toByteArray)
+    )
   }
 }
