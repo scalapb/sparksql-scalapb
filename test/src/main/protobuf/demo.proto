@@ -22,15 +22,3 @@ message Person {
   repeated Address addresses = 5;
   optional Base base = 6;
 }
-
-message Defaults {
-  required int32 i32Value = 1;
-  required int64 i64Value = 2;
-  required uint32 u32Value = 3;
-  required uint64 u64Value = 4;
-  required double dValue = 5;
-  required float fValue = 6;
-  required bool bValue = 7;
-  required string sValue = 8;
-  required bytes binaryValue = 9;
-}

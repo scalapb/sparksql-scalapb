@@ -1,6 +1,6 @@
 
 import com.example.protos.base.Base
-import com.example.protos.demo.{Address, Defaults, DemoProtoUdt, Gender, Person}
+import com.example.protos.demo.{Address, DemoProtoUdt, Gender, Person}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
 import org.apache.spark.sql.functions.udf
@@ -78,11 +78,47 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
     ))
   }
 
-  "RDD[Defaults]" should "have non-null default values after converting to Dataframe" in {
-    val defaults = Defaults.defaultInstance
+  "Proto2 RDD[DefaultsRequired]" should "have non-null default values after converting to Dataframe" in {
+    import com.example.protos.defaults.DefaultsRequired
+    val defaults = DefaultsRequired.defaultInstance
     val row = ProtoSQL.messageToRow(defaults)
-    row must be(
-      Row(defaults.i32Value, defaults.i64Value, defaults.u32Value, defaults.u64Value, defaults.dValue, defaults.fValue, defaults.bValue, defaults.sValue, defaults.binaryValue.toByteArray)
+    val expected = Row(
+      defaults.i32Value
+      , defaults.i64Value
+      , defaults.u32Value
+      , defaults.u64Value
+      , defaults.dValue
+      , defaults.fValue
+      , defaults.bValue
+      , defaults.sValue
+      , defaults.binaryValue.toByteArray
     )
+    row must be(expected)
+  }
+
+  "Proto2 RDD[DefaultsOptional]" should "have null values after converting to Dataframe" in {
+    import com.example.protos.defaults.DefaultsOptional
+    val defaults = DefaultsOptional.defaultInstance
+    val row = ProtoSQL.messageToRow(defaults)
+    val expected = Row(null, null, null, null, null, null, null, null, null)
+    row must be(expected)
+  }
+
+  "Proto3 RDD[DefaultsV3]" should "have non-null default values after converting to Dataframe" in {
+    import com.example.protos.defaultsv3.DefaultsV3
+    val defaults = DefaultsV3.defaultInstance
+    val row = ProtoSQL.messageToRow(defaults)
+    val expected = Row(
+      defaults.i32Value
+      , defaults.i64Value
+      , defaults.u32Value
+      , defaults.u64Value
+      , defaults.dValue
+      , defaults.fValue
+      , defaults.bValue
+      , defaults.sValue
+      , defaults.binaryValue.toByteArray
+    )
+    row must be(expected)
   }
 }
