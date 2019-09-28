@@ -5,6 +5,6 @@ val pluginVersion = sys.props.get("plugin.version").getOrElse(
                  )
 )
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.19")
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.25")
 
 libraryDependencies += "com.thesamet.scalapb" %% "sparksql-scalapb-gen" % pluginVersion
