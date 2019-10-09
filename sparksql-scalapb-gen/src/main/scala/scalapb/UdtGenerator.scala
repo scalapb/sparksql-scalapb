@@ -2,24 +2,35 @@ package scalapb
 
 import com.google.protobuf.Descriptors._
 import com.google.protobuf.ExtensionRegistry
-import com.google.protobuf.compiler.PluginProtos.{CodeGeneratorRequest, CodeGeneratorResponse}
+import com.google.protobuf.compiler.PluginProtos.{
+  CodeGeneratorRequest,
+  CodeGeneratorResponse
+}
 
 import scala.collection.JavaConverters._
-import scalapb.compiler.{DescriptorImplicits, FunctionalPrinter, GeneratorParams}
+import scalapb.compiler.{
+  DescriptorImplicits,
+  FunctionalPrinter,
+  GeneratorParams
+}
 import scalapb.options.compiler.Scalapb
 
-
-class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = false) {
+class UdtGeneratorHandler(
+    request: CodeGeneratorRequest,
+    flatPackage: Boolean = false
+) {
   val params = GeneratorParams(
     flatPackage = flatPackage ||
-      request.getParameter.split(",").contains("flat_package"))
+      request.getParameter.split(",").contains("flat_package")
+  )
 
   val fileDescByName: Map[String, FileDescriptor] =
-    request.getProtoFileList.asScala.foldLeft[Map[String, FileDescriptor]](Map.empty) {
-      case (acc, fp) =>
-        val deps = fp.getDependencyList.asScala.map(acc)
-        acc + (fp.getName -> FileDescriptor.buildFrom(fp, deps.toArray))
-    }
+    request.getProtoFileList.asScala
+      .foldLeft[Map[String, FileDescriptor]](Map.empty) {
+        case (acc, fp) =>
+          val deps = fp.getDependencyList.asScala.map(acc)
+          acc + (fp.getName -> FileDescriptor.buildFrom(fp, deps.toArray))
+      }
 
   val Implicits = new DescriptorImplicits(params, fileDescByName.values.toSeq)
   import Implicits._
@@ -27,11 +38,10 @@ class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = 
   def generate: CodeGeneratorResponse = {
     val b = CodeGeneratorResponse.newBuilder
 
-    request.getFileToGenerateList.asScala.foreach {
-      name =>
-        val fileDesc = fileDescByName(name)
-        val responseFile = generateFile(fileDesc)
-        b.addFile(responseFile)
+    request.getFileToGenerateList.asScala.foreach { name =>
+      val fileDesc = fileDescByName(name)
+      val responseFile = generateFile(fileDesc)
+      b.addFile(responseFile)
     }
     b.build()
   }
@@ -46,28 +56,44 @@ class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = 
 
   def udtName(e: EnumDescriptor) = e.scalaTypeName.replace(".", "__")
 
-  def generateEnum(fp: FunctionalPrinter, e: EnumDescriptor): FunctionalPrinter = {
+  def generateEnum(
+      fp: FunctionalPrinter,
+      e: EnumDescriptor
+  ): FunctionalPrinter = {
     fp.add(
-      s"class ${udtName(e)} extends _root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT[${e.scalaTypeName}]")
+      s"class ${udtName(e)} extends _root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT[${e.scalaTypeName}]"
+    )
   }
 
   def generateFile(fileDesc: FileDescriptor): CodeGeneratorResponse.File = {
     val b = CodeGeneratorResponse.File.newBuilder()
-    b.setName(s"${fileDesc.scalaDirectory}/${fileDesc.fileDescriptorObjectName}Udt.scala")
+    b.setName(
+      s"${fileDesc.scalaDirectory}/${fileDesc.fileDescriptorObjectName}Udt.scala"
+    )
     val fp = FunctionalPrinter()
       .add(s"package ${fileDesc.scalaPackageName}")
       .add("")
       .add(s"object ${fileDesc.fileDescriptorObjectName}Udt {")
       .indent
       .print(allEnums(fileDesc))(generateEnum)
-      .add("def register(): Unit = { } // actual work happens at the constructor.")
+      .add(
+        "def register(): Unit = { } // actual work happens at the constructor."
+      )
       .add("")
       .print(fileDesc.getDependencies.asScala)(
-        (fp, dep) => fp.add(s"${dep.scalaPackageName}.${dep.fileDescriptorObjectName}Udt.register()")
+        (fp, dep) =>
+          fp.add(
+            s"${dep.scalaPackageName}.${dep.fileDescriptorObjectName}Udt.register()"
+          )
       )
       .print(allEnums(fileDesc))(
-        (fp, e) => fp.add(
-          s"""_root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT.register[${e.scalaTypeName}, ${fileDesc.scalaPackageName}.${fileDesc.fileDescriptorObjectName}Udt.${udtName(e)}]()"""))
+        (fp, e) =>
+          fp.add(
+            s"""_root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT.register[${e.scalaTypeName}, ${fileDesc.scalaPackageName}.${fileDesc.fileDescriptorObjectName}Udt.${udtName(
+              e
+            )}]()"""
+          )
+      )
       .outdent
       .add("}")
 
@@ -76,7 +102,8 @@ class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = 
   }
 }
 
-class UdtGenerator(flatPackage: Boolean) extends protocbridge.ProtocCodeGenerator {
+class UdtGenerator(flatPackage: Boolean)
+    extends protocbridge.ProtocCodeGenerator {
   def run(requestBytes: Array[Byte]): Array[Byte] = {
     val registry = ExtensionRegistry.newInstance()
     Scalapb.registerAllExtensions(registry)

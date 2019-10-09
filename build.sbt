@@ -9,7 +9,8 @@ val Scala211 = "2.11.12"
 
 val Scala212 = "2.12.10"
 
-lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
+lazy val udtGenerator = project
+  .in(file("sparksql-scalapb-gen"))
   .settings(
     name := "sparksql-scalapb-gen",
     crossScalaVersions := Seq(Scala212, Scala210),
@@ -18,10 +19,11 @@ lazy val udtGenerator = project.in(file("sparksql-scalapb-gen"))
       "com.thesamet.scalapb" %% "compilerplugin" % scalapbVersion
     ),
     name := "sparksql-scalapb-gen",
-    PB.targets in Compile := Seq(),
+    PB.targets in Compile := Seq()
   )
 
-lazy val sparkSqlScalaPB = project.in(file("sparksql-scalapb"))
+lazy val sparkSqlScalaPB = project
+  .in(file("sparksql-scalapb"))
   .settings(
     name := "sparksql-scalapb",
     crossScalaVersions := Seq(Scala211, Scala212),
@@ -49,15 +51,18 @@ releaseProcess := Seq[ReleaseStep](
   releaseStepCommand("sonatypeBundleRelease"),
   setNextVersion,
   commitNextVersion,
-  pushChanges,
+  pushChanges
 )
 
 lazy val root =
-  project.in(file("."))
+  project
+    .in(file("."))
     .settings(
       publishArtifact := false,
       publish := {},
       publishLocal := {}
-    ).aggregate(
-      sparkSqlScalaPB, udtGenerator
+    )
+    .aggregate(
+      sparkSqlScalaPB,
+      udtGenerator
     )

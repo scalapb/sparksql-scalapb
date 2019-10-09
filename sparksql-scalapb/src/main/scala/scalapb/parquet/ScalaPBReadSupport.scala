@@ -9,13 +9,20 @@ import org.apache.parquet.hadoop.api.ReadSupport.ReadContext
 import org.apache.parquet.io.api.{GroupConverter, RecordMaterializer}
 import org.apache.parquet.schema.MessageType
 
-class ScalaPBReadSupport[T <: GeneratedMessage with Message[T]] extends ReadSupport[T] {
+class ScalaPBReadSupport[T <: GeneratedMessage with Message[T]]
+    extends ReadSupport[T] {
   override def prepareForRead(
-    configuration: Configuration,
-    keyValueMetaData: util.Map[String, String],
-    fileSchema: MessageType,
-    readContext: ReadContext): RecordMaterializer[T] = {
-    val protoClass = Option(keyValueMetaData.get(ScalaPBReadSupport.PB_CLASS)).getOrElse(throw new RuntimeException(s"Value for ${ScalaPBReadSupport.PB_CLASS} not found."))
+      configuration: Configuration,
+      keyValueMetaData: util.Map[String, String],
+      fileSchema: MessageType,
+      readContext: ReadContext
+  ): RecordMaterializer[T] = {
+    val protoClass =
+      Option(keyValueMetaData.get(ScalaPBReadSupport.PB_CLASS)).getOrElse(
+        throw new RuntimeException(
+          s"Value for ${ScalaPBReadSupport.PB_CLASS} not found."
+        )
+      )
     val cmp = {
       import scala.reflect.runtime.universe
 

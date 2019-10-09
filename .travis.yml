@@ -14,7 +14,12 @@ script:
 
 jobs:
   include:
+    - name: "Formatting"
+      scala: 2.12
+      script:
+      - sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck
     - name: "UDT generator"
       scala: 2.12
       script:
       - ./test_udt_gen.sh
+      - cd test && sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck

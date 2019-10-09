@@ -1,4 +1,3 @@
-
 import com.example.protos.base.Base
 import com.example.protos.demo.{Address, DemoProtoUdt, Gender, Person}
 import com.example.protos.demo.Person.Inner.InnerEnum
@@ -10,11 +9,21 @@ import scalapb.spark.ProtoSQL
 case class InnerLike(innerValue: InnerEnum)
 
 case class PersonLike(
-  name: String, age: Int, addresses: Seq[Address], gender: Gender,
-  tags: Seq[String] = Seq.empty, base: Option[Base] = None, inner: Option[InnerLike] = None)
+    name: String,
+    age: Int,
+    addresses: Seq[Address],
+    gender: Gender,
+    tags: Seq[String] = Seq.empty,
+    base: Option[Base] = None,
+    inner: Option[InnerLike] = None
+)
 
 class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
-  val spark: SparkSession = SparkSession.builder().appName("ScalaPB Demo").master("local[2]").getOrCreate()
+  val spark: SparkSession = SparkSession
+    .builder()
+    .appName("ScalaPB Demo")
+    .master("local[2]")
+    .getOrCreate()
 
   import spark.implicits._
 
@@ -22,7 +31,6 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
 
   val GenderFromString = udf[Option[Gender], String](Gender.fromName)
   val GenderToString = udf[Option[String], Gender](g => Option(g).map(_.name))
-
 
   val TestPerson = Person().update(
     _.name := "Owen M",
@@ -48,8 +56,12 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
 
   "Creating enum dataset" should "work" in {
     val genders = Seq("MALE", "MALE", "FEMALE", null)
-    val gendersDS = spark.createDataset(genders).withColumnRenamed("value", "genderString")
-    val typedDF = gendersDS.withColumn("gender", GenderFromString(gendersDS("genderString")))
+    val gendersDS =
+      spark.createDataset(genders).withColumnRenamed("value", "genderString")
+    val typedDF = gendersDS.withColumn(
+      "gender",
+      GenderFromString(gendersDS("genderString"))
+    )
     val localTypedDF: Array[Row] = typedDF.collect()
     typedDF.filter(GenderToString($"gender") === "MALE").count() must be(2)
     typedDF.filter(GenderToString($"gender") === "FEMALE").count() must be(1)
@@ -58,7 +70,9 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
         Row("MALE", Gender.MALE),
         Row("MALE", Gender.MALE),
         Row("FEMALE", Gender.FEMALE),
-        Row(null, null)))
+        Row(null, null)
+      )
+    )
   }
 
   "Dataset[Person]" should "work" in {
@@ -67,19 +81,26 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
     ds.where($"age" > 40).count() must be(0)
     ds.where(GenderToString($"gender") === "MALE").count() must be(1)
     ds.collect() must be(Array(TestPerson))
-    ds.toDF().as[Person].collect() must be (Array(TestPerson))
+    ds.toDF().as[Person].collect() must be(Array(TestPerson))
   }
 
   "as[Person]" should "work for manual building" in {
     val pl = PersonLike(
-      name = "Owen M", age = 35, addresses=Seq.empty, gender = Gender.MALE, inner = Some(InnerLike(InnerEnum.V1)))
+      name = "Owen M",
+      age = 35,
+      addresses = Seq.empty,
+      gender = Gender.MALE,
+      inner = Some(InnerLike(InnerEnum.V1))
+    )
     val manualDF: DataFrame = spark.createDataFrame(Seq(pl))
-    manualDF.as[Person].collect()(0) must be(Person().update(
-      _.name := "Owen M",
-      _.age := 35,
-      _.gender := Gender.MALE,
-      _.inner.innerValue := InnerEnum.V1
-    ))
+    manualDF.as[Person].collect()(0) must be(
+      Person().update(
+        _.name := "Owen M",
+        _.age := 35,
+        _.gender := Gender.MALE,
+        _.inner.innerValue := InnerEnum.V1
+      )
+    )
   }
 
   "Proto2 RDD[DefaultsRequired]" should "have non-null default values after converting to Dataframe" in {
@@ -87,15 +108,15 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
     val defaults = DefaultsRequired.defaultInstance
     val row = ProtoSQL.messageToRow(defaults)
     val expected = Row(
-      defaults.i32Value
-      , defaults.i64Value
-      , defaults.u32Value
-      , defaults.u64Value
-      , defaults.dValue
-      , defaults.fValue
-      , defaults.bValue
-      , defaults.sValue
-      , defaults.binaryValue.toByteArray
+      defaults.i32Value,
+      defaults.i64Value,
+      defaults.u32Value,
+      defaults.u64Value,
+      defaults.dValue,
+      defaults.fValue,
+      defaults.bValue,
+      defaults.sValue,
+      defaults.binaryValue.toByteArray
     )
     row must be(expected)
   }
@@ -113,15 +134,15 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
     val defaults = DefaultsV3.defaultInstance
     val row = ProtoSQL.messageToRow(defaults)
     val expected = Row(
-      defaults.i32Value
-      , defaults.i64Value
-      , defaults.u32Value
-      , defaults.u64Value
-      , defaults.dValue
-      , defaults.fValue
-      , defaults.bValue
-      , defaults.sValue
-      , defaults.binaryValue.toByteArray
+      defaults.i32Value,
+      defaults.i64Value,
+      defaults.u32Value,
+      defaults.u64Value,
+      defaults.dValue,
+      defaults.fValue,
+      defaults.bValue,
+      defaults.sValue,
+      defaults.binaryValue.toByteArray
     )
     row must be(expected)
   }
