@@ -1,14 +1,17 @@
 
 import com.example.protos.base.Base
 import com.example.protos.demo.{Address, DemoProtoUdt, Gender, Person}
+import com.example.protos.demo.Person.Inner.InnerEnum
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
 import org.apache.spark.sql.functions.udf
 import scalapb.spark.ProtoSQL
 
+case class InnerLike(innerValue: InnerEnum)
+
 case class PersonLike(
   name: String, age: Int, addresses: Seq[Address], gender: Gender,
-  tags: Seq[String] = Seq.empty, base: Option[Base] = None)
+  tags: Seq[String] = Seq.empty, base: Option[Base] = None, inner: Option[InnerLike] = None)
 
 class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession.builder().appName("ScalaPB Demo").master("local[2]").getOrCreate()
@@ -69,12 +72,13 @@ class DataSpec extends FlatSpec with MustMatchers with BeforeAndAfterAll {
 
   "as[Person]" should "work for manual building" in {
     val pl = PersonLike(
-      name = "Owen M", age = 35, addresses=Seq.empty, gender = Gender.MALE)
+      name = "Owen M", age = 35, addresses=Seq.empty, gender = Gender.MALE, inner = Some(InnerLike(InnerEnum.V1)))
     val manualDF: DataFrame = spark.createDataFrame(Seq(pl))
     manualDF.as[Person].collect()(0) must be(Person().update(
       _.name := "Owen M",
       _.age := 35,
-      _.gender := Gender.MALE
+      _.gender := Gender.MALE,
+      _.inner.innerValue := InnerEnum.V1
     ))
   }
 

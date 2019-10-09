@@ -67,7 +67,7 @@ class UdtGeneratorHandler(request: CodeGeneratorRequest, flatPackage: Boolean = 
       )
       .print(allEnums(fileDesc))(
         (fp, e) => fp.add(
-          s"""_root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT.register(classOf[${e.scalaTypeName}].getName, classOf[${fileDesc.scalaPackageName}.${fileDesc.fileDescriptorObjectName}Udt.${udtName(e)}].getName)"""))
+          s"""_root_.org.apache.spark.scalapb_hack.GeneratedEnumUDT.register[${e.scalaTypeName}, ${fileDesc.scalaPackageName}.${fileDesc.fileDescriptorObjectName}Udt.${udtName(e)}]()"""))
       .outdent
       .add("}")
 
