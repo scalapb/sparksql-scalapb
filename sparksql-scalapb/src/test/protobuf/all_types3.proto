@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package scalapb.spark.test3;
+
+message Int32Test {
+  int32 optional_int32 = 1;
+  uint32 optional_uint32 = 2;
+  sint32 optional_sint32 = 3;
+  fixed32 optional_fixed32 = 4;
+  sfixed32 optional_sfixed32 = 5;
+
+  repeated int32 repeated_int32 = 11;
+  repeated uint32 repeated_uint32 = 12;
+  repeated sint32 repeated_sint32 = 13;
+  repeated fixed32 repeated_fixed32 = 14;
+  repeated sfixed32 repeated_sfixed32 = 15;
+}
+
+message Int64Test {
+  int64 optional_int64 = 1;
+  uint64 optional_uint64 = 2;
+  sint64 optional_sint64 = 3;
+  fixed64 optional_fixed64 = 4;
+  sfixed64 optional_sfixed64 = 5;
+
+  repeated int64 repeated_int64 = 11;
+  repeated uint64 repeated_uint64 = 12;
+  repeated sint64 repeated_sint64 = 13;
+  repeated fixed64 repeated_fixed64 = 14;
+  repeated sfixed64 repeated_sfixed64 = 15;
+}
+
+message DoubleTest {
+  double optional_double = 1;
+  repeated double repeated_double = 3;
+}
+
+message FloatTest {
+  float optional_float = 1;
+  repeated float repeated_float = 3;
+}
+
+message StringTest {
+  string optional_string = 1;
+  repeated string repeated_string = 3;
+}
+
+message BoolTest {
+  bool optional_bool = 1;
+  repeated bool repeated_bool = 3;
+}
+
+message BytesTest {
+  bytes optional_bytes = 1;
+  repeated bytes repeated_bytes = 3;
+}
+
+enum TopLevelEnum {
+  EMPTY = 0;
+  FOREIGN_FOO = 4;
+  FOREIGN_BAR = 5;
+  FOREIGN_BAZ = 6;
+}
+
+message EnumTest {
+  enum NestedEnum {
+    UNKNOWN = 0;
+    FOO = 1;
+    BAR = 2;
+    BAZ = 3;
+    NEG = -1; // Intentionally negative.
+  }
+  NestedEnum optional_nested_enum = 1;
+  repeated NestedEnum repeated_nested_enum = 3;
+  TopLevelEnum optional_top_level_enum = 4;
+  repeated TopLevelEnum repeated_top_level_enum = 6;
+}
+
+message TopLevelMessage {
+  int32 c = 1;
+}
+
+message MessageTest {
+  message NestedMessage {
+    int32 bb = 1;
+  }
+  NestedMessage optional_nested_message = 1;
+  repeated NestedMessage repeated_nested_message = 3;
+
+  TopLevelMessage optional_top_level_message = 4;
+  repeated TopLevelMessage repeated_top_level_message = 6;
+}
+
+message OneofTest {
+  oneof oneof_field {
+    uint32 oneof_uint32 = 111;
+    MessageTest.NestedMessage oneof_nested_message = 112;
+    string oneof_string = 113;
+    bytes oneof_bytes = 114;
+  }
+}
+
+message Level1 {
+  message Level2 {
+    message Level3 {
+      bytes c = 2;
+    }
+    Level3 level3 = 1;
+    int32 b = 2;
+  }
+  Level2 level2 = 1;
+  string a = 2;
+}

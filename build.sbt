@@ -15,8 +15,18 @@ lazy val sparkSqlScalaPB = project
     name := "sparksql-scalapb",
     crossScalaVersions := Seq(Scala211, Scala212),
     libraryDependencies ++= Seq(
+      "org.typelevel" %% "frameless-dataset" % "0.8.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
-      "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided"
+      "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided",
+      "org.apache.spark" %% "spark-sql" % "2.4.4" % "test",
+      "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+      "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3" % "test"
+    ),
+    inConfig(Test)(
+        sbtprotoc.ProtocPlugin.protobufConfigSettings
+    ),
+    PB.targets in Test := Seq(
+      scalapb.gen(grpc=false) -> (sourceManaged in Test).value,
     )
   )
 
