@@ -1,14 +1,14 @@
 package scalapb
 
-import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
+import org.apache.spark.sql.{DataFrame, Encoder, SQLContext, SparkSession}
 
 import scala.reflect.ClassTag
 
 package object spark {
   implicit class ProtoSQLContext(val sqlContext: SQLContext) extends AnyVal {
-    def protoToDataFrame[T <: GeneratedMessage with Message[T]](
+    def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
         protoRdd: org.apache.spark.rdd.RDD[T]
-    )(implicit cmp: GeneratedMessageCompanion[T]) = {
+    ) = {
       ProtoSQL.protoToDataFrame(sqlContext, protoRdd)
     }
   }
@@ -22,13 +22,13 @@ package object spark {
 
     def toDataFrame(
         sqlContext: SQLContext
-    )(implicit cmp: GeneratedMessageCompanion[T]): DataFrame = {
+    )(implicit encoder: Encoder[T]): DataFrame = {
       ProtoSQL.protoToDataFrame(sqlContext, protoRdd)
     }
 
     def toDataFrame(
         sparkSession: SparkSession
-    )(implicit cmp: GeneratedMessageCompanion[T]): DataFrame = {
+    )(implicit encoder: Encoder[T]): DataFrame = {
       ProtoSQL.protoToDataFrame(sparkSession, protoRdd)
     }
   }

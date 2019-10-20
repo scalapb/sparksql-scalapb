@@ -1,6 +1,23 @@
 package scalapb.spark
 
-import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
+import org.apache.spark.sql.catalyst.{InternalRow, ScalaReflection}
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.catalyst.expressions.{
+  AttributeReference,
+  GenericInternalRow
+}
+import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
+import org.apache.spark.sql.catalyst.util.GenericArrayData
+import org.apache.spark.sql.execution.ExternalRDD
+import org.apache.spark.sql.{
+  DataFrame,
+  Dataset,
+  Encoder,
+  FramelessInternals,
+  Row,
+  SQLContext,
+  SparkSession
+}
 import org.apache.spark.sql.types.{
   ArrayType,
   BinaryType,
@@ -14,6 +31,7 @@ import org.apache.spark.sql.types.{
   StructField,
   StructType
 }
+import org.apache.spark.unsafe.types.UTF8String
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
 import scalapb.descriptors.{
   FieldDescriptor,
@@ -35,14 +53,15 @@ import scalapb.descriptors.{
 object ProtoSQL {
   import scala.language.existentials
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T]: GeneratedMessageCompanion](
+  def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
       sparkSession: SparkSession,
       protoRdd: org.apache.spark.rdd.RDD[T]
   ): DataFrame = {
-    sparkSession.createDataFrame(protoRdd.map(messageToRow[T]), schemaFor[T])
+    val logicalPlan: LogicalPlan = ExternalRDD(protoRdd, sparkSession)
+    FramelessInternals.ofRows(sparkSession, logicalPlan)
   }
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T]: GeneratedMessageCompanion](
+  def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
       sqlContext: SQLContext,
       protoRdd: org.apache.spark.rdd.RDD[T]
   ): DataFrame = {
@@ -56,7 +75,7 @@ object ProtoSQL {
   }
 
   private def toRowData(pvalue: PValue): Any = pvalue match {
-    case PString(value)     => value
+    case PString(value)     => UTF8String.fromString(value)
     case PInt(value)        => value
     case PLong(value)       => value
     case PDouble(value)     => value
@@ -64,24 +83,27 @@ object ProtoSQL {
     case PBoolean(value)    => value
     case PByteString(value) => value.toByteArray
     case value: PMessage    => pMessageToRow(value)
-    case PRepeated(value)   => value.map(toRowData)
-    case PEnum(descriptor)  => descriptor.name
-    case PEmpty             => null
+    case PRepeated(value) =>
+      new GenericArrayData(value.map(toRowData)) // value.map(toRowData)
+    case penum: PEnum => JavaHelpers.penumToString(penum)
+    case PEmpty       => null
   }
 
-  def messageToRow[T <: GeneratedMessage with Message[T]](msg: T): Row = {
+  def messageToRow[T <: GeneratedMessage with Message[T]](
+      msg: T
+  ): InternalRow = {
     pMessageToRow(msg.toPMessage)
   }
 
-  def pMessageToRow(msg: PMessage): Row = {
-    Row(
+  def pMessageToRow(msg: PMessage): InternalRow = {
+    InternalRow(
       msg.value.toVector
         .sortBy(_._1.index)
         .map(entry => toRowData(entry._2)): _*
     )
   }
 
-  def dataTypeFor(fd: FieldDescriptor): DataType = fd.scalaType match {
+  def singularDataType(fd: FieldDescriptor): DataType = fd.scalaType match {
     case ScalaType.Int         => IntegerType
     case ScalaType.Long        => LongType
     case ScalaType.Float       => FloatType
@@ -93,13 +115,27 @@ object ProtoSQL {
     case _: ScalaType.Enum     => StringType
   }
 
+  def dataTypeFor(fd: FieldDescriptor): DataType =
+    if (fd.isRepeated) ArrayType(singularDataType(fd), containsNull = false)
+    else singularDataType(fd)
+
   def structFieldFor(fd: FieldDescriptor): StructField = {
-    val dataType = dataTypeFor(fd)
     StructField(
       fd.name,
-      if (fd.isRepeated) ArrayType(dataType, containsNull = false)
-      else dataType,
+      dataTypeFor(fd),
       nullable = !fd.isRequired && !fd.isRepeated
     )
+  }
+
+  def createDataFrame[T <: GeneratedMessage with Message[T]: GeneratedMessageCompanion](
+      spark: SparkSession,
+      data: Seq[T]
+  ): DataFrame = {
+    val schema = ProtoSQL.schemaFor[T]
+    val attributeSeq = schema.map(
+      f => AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
+    )
+    val logicalPlan = LocalRelation(attributeSeq, data.map(messageToRow[T]))
+    new Dataset[Row](spark, logicalPlan, RowEncoder(schema))
   }
 }

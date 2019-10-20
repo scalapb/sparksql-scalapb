@@ -1,9 +1,11 @@
 import ReleaseTransformations._
 import scalapb.compiler.Version.scalapbVersion
 
-organization in ThisBuild := "com.thesamet.scalapb"
+ThisBuild / organization := "com.thesamet.scalapb"
 
-val Scala210 = "2.10.7"
+ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
+
+ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
 val Scala211 = "2.11.12"
 
@@ -15,8 +17,18 @@ lazy val sparkSqlScalaPB = project
     name := "sparksql-scalapb",
     crossScalaVersions := Seq(Scala211, Scala212),
     libraryDependencies ++= Seq(
+      "org.typelevel" %% "frameless-dataset" % "0.8.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
-      "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided"
+      "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided",
+      "org.apache.spark" %% "spark-sql" % "2.4.4" % "test",
+      "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+      "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3" % "test"
+    ),
+    inConfig(Test)(
+      sbtprotoc.ProtocPlugin.protobufConfigSettings
+    ),
+    PB.targets in Test := Seq(
+      scalapb.gen(grpc = false) -> (sourceManaged in Test).value
     )
   )
 
@@ -50,5 +62,5 @@ lazy val root =
       publishLocal := {}
     )
     .aggregate(
-      sparkSqlScalaPB,
+      sparkSqlScalaPB
     )
