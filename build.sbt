@@ -15,7 +15,7 @@ lazy val udtGenerator = project
     name := "sparksql-scalapb-gen",
     crossScalaVersions := Seq(Scala212, Scala210),
     libraryDependencies ++= Seq(
-      "com.thesamet.scalapb" %% "protoc-bridge" % "0.7.10",
+      "com.thesamet.scalapb" %% "protoc-bridge" % "0.7.13",
       "com.thesamet.scalapb" %% "compilerplugin" % scalapbVersion
     ),
     name := "sparksql-scalapb-gen",
