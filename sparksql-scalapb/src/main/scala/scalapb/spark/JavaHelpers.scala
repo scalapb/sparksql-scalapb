@@ -38,17 +38,16 @@ object JavaHelpers {
     }
   }
 
-  def enumFromString[T <: GeneratedEnum](
+  def enumValueFromString[T <: GeneratedEnum](
       cmp: GeneratedEnumCompanion[T],
       inputUtf8: UTF8String
-  ): T = {
+  ): Int = {
     val input = inputUtf8.toString
     cmp.fromName(input) match {
-      case Some(r) => r.asInstanceOf[T]
+      case Some(r) => r.value
       case None =>
         try {
-          val enumValue = input.toInt
-          cmp.fromValue(enumValue)
+          input.toInt
         } catch {
           case _: NumberFormatException =>
             throw new RuntimeException(
@@ -61,7 +60,7 @@ object JavaHelpers {
   def penumFromString(
       cmp: GeneratedEnumCompanion[_],
       inputUtf8: UTF8String
-  ): Any = {
+  ): PValue = {
     val input = inputUtf8.toString
     cmp.fromName(input) match {
       case Some(r) => PEnum(r.asInstanceOf[GeneratedEnum].scalaValueDescriptor)
@@ -80,15 +79,9 @@ object JavaHelpers {
     }
   }
 
-  def fromPMessage[T <: GeneratedMessage with Message[T]](
-      cmp: GeneratedMessageCompanion[T],
-      input: Object
-  ): GeneratedMessage = {
-    cmp.messageReads
-      .read(input.asInstanceOf[PMessage])
-  }
+  def asPValue(h: Object): PValue = h.asInstanceOf[PValue]
 
-  def mkPMessage(cmp: GeneratedMessageCompanion[_], args: ArrayData): Any = {
+  def mkPMessage(cmp: GeneratedMessageCompanion[_], args: ArrayData): PValue = {
     // returning Any to ensure the any-value doesn't get unwrapped in runtime.
     PMessage(
       cmp.scalaDescriptor.fields
@@ -99,7 +92,7 @@ object JavaHelpers {
     )
   }
 
-  def mkPRepeated(args: ArrayData): Any = {
+  def mkPRepeated(args: ArrayData): PValue = {
     PRepeated(args.array.toVector.asInstanceOf[Vector[PValue]])
   }
 

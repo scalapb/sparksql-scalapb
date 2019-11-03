@@ -14,7 +14,7 @@ import org.apache.spark.sql.catalyst.expressions.{
 }
 import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
-import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
+import scalapb.GeneratedMessageCompanion
 
 object ToCatalystHelpers {
   def messageToCatalyst(
@@ -44,7 +44,7 @@ object ToCatalystHelpers {
       fd: FieldDescriptor,
       inputObject: Expression
   ): Expression = {
-    val getField = Invoke(
+    def getField = Invoke(
       inputObject,
       "getField",
       ObjectType(classOf[PValue]),
@@ -65,13 +65,15 @@ object ToCatalystHelpers {
       ) :: Nil
     )
 
-    val getFieldByNumber = Invoke(
+    def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
+
+    def getFieldByNumber = Invoke(
       inputObject,
       "getFieldByNumber",
       if (fd.isRepeated)
         ObjectType(classOf[Seq[_]])
       else
-        ObjectType(classOf[GeneratedMessage]),
+        ObjectType(messageFieldCompanion.defaultInstance.getClass),
       Literal(fd.number, IntegerType) :: Nil
     )
 
@@ -83,9 +85,8 @@ object ToCatalystHelpers {
           singularFieldToCatalyst(fd, e)
         })
       } else {
-        val subCmp = cmp.messageCompanionForFieldNumber(fd.number)
         (getFieldByNumber, { e: Expression =>
-          messageToCatalyst(subCmp, e)
+          messageToCatalyst(messageFieldCompanion, e)
         })
       }
 
@@ -94,7 +95,7 @@ object ToCatalystHelpers {
         MapObjects(
           transform,
           fieldGetter,
-          ObjectType(classOf[GeneratedMessage])
+          ObjectType(messageFieldCompanion.defaultInstance.getClass)
         )
       else {
         val getter = StaticInvoke(

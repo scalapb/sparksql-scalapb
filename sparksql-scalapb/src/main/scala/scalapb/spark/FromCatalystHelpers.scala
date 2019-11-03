@@ -35,7 +35,7 @@ object FromCatalystHelpers {
     }
     StaticInvoke(
       JavaHelpers.getClass,
-      ObjectType(classOf[Object]),
+      ObjectType(classOf[PValue]),
       "mkPMessage",
       Literal.fromObject(cmp) :: CreateArray(args) :: Nil
     )
@@ -54,14 +54,14 @@ object FromCatalystHelpers {
       )
       StaticInvoke(
         JavaHelpers.getClass,
-        ObjectType(classOf[Object]),
+        ObjectType(classOf[PValue]),
         "mkPRepeated",
         objs :: Nil
       )
     } else if (fd.isOptional)
       If(
         IsNull(input),
-        Literal.fromObject(PEmpty, ObjectType(classOf[Any])),
+        Literal.fromObject(PEmpty, ObjectType(classOf[PValue])),
         singleFieldValueFromCatalyst(cmp, fd, input)
       )
     else singleFieldValueFromCatalyst(cmp, fd, input)
@@ -83,13 +83,13 @@ object FromCatalystHelpers {
         NewInstance(
           classOf[PByteString],
           bs :: Nil,
-          ObjectType(classOf[Object])
+          ObjectType(classOf[PValue])
         )
       case ScalaType.Enum(_) =>
         val evd = cmp.enumCompanionForFieldNumber(fd.number)
         StaticInvoke(
           JavaHelpers.getClass,
-          ObjectType(classOf[Object]),
+          ObjectType(classOf[PValue]),
           "penumFromString",
           Literal.fromObject(evd) :: input :: Nil
         )
@@ -103,21 +103,21 @@ object FromCatalystHelpers {
         NewInstance(
           classOf[PString],
           asString :: Nil,
-          ObjectType(classOf[Object])
+          ObjectType(classOf[PValue])
         )
       case ScalaType.Int =>
-        NewInstance(classOf[PInt], input :: Nil, ObjectType(classOf[Object]))
+        NewInstance(classOf[PInt], input :: Nil, ObjectType(classOf[PValue]))
       case ScalaType.Long =>
-        NewInstance(classOf[PLong], input :: Nil, ObjectType(classOf[Object]))
+        NewInstance(classOf[PLong], input :: Nil, ObjectType(classOf[PValue]))
       case ScalaType.Double =>
-        NewInstance(classOf[PDouble], input :: Nil, ObjectType(classOf[Object]))
+        NewInstance(classOf[PDouble], input :: Nil, ObjectType(classOf[PValue]))
       case ScalaType.Float =>
-        NewInstance(classOf[PFloat], input :: Nil, ObjectType(classOf[Object]))
+        NewInstance(classOf[PFloat], input :: Nil, ObjectType(classOf[PValue]))
       case ScalaType.Boolean =>
         NewInstance(
           classOf[PBoolean],
           input :: Nil,
-          ObjectType(classOf[Object])
+          ObjectType(classOf[PValue])
         )
     }
   }
