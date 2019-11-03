@@ -18,11 +18,6 @@ jobs:
       scala: 2.12
       script:
       - sbt scalafmtCheck test:scalafmtCheck scalafmtSbtCheck
-      - ./test_udt_gen.sh scalafmtCheck test:scalafmtCheck scalafmtSbtCheck
-    - name: "UDT generator"
-      scala: 2.12
-      script:
-      - ./test_udt_gen.sh
 
 cache:
   directories:
