@@ -6,6 +6,6 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.26")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.8")
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.0")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.1")
 
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.9.4"
