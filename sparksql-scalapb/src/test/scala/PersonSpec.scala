@@ -255,7 +255,6 @@ class PersonSpec
         ("Other2", None)
       )
     )
-
   }
 
   "serialize and deserialize" should "work on dataset of bytes" in {
