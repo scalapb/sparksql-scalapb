@@ -6,8 +6,10 @@ import com.example.protos.demo.{Address, Gender, Person, SimplePerson}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
 import org.scalatest.events.TestPending
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
 case class InnerLike(inner_value: String)
 
@@ -29,10 +31,10 @@ case class Foo(x: Person, y: String)
 case class Foo2(x: Int, y: String)
 
 class PersonSpec
-    extends FlatSpec
-    with MustMatchers
+    extends AnyFlatSpec
+    with Matchers
     with BeforeAndAfterAll
-    with GeneratorDrivenPropertyChecks {
+    with ScalaCheckDrivenPropertyChecks {
   val spark: SparkSession = SparkSession
     .builder()
     .appName("ScalaPB Demo")
