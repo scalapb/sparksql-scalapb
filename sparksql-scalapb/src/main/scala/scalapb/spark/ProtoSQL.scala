@@ -132,8 +132,8 @@ object ProtoSQL {
       data: Seq[T]
   ): DataFrame = {
     val schema = ProtoSQL.schemaFor[T]
-    val attributeSeq = schema.map(
-      f => AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
+    val attributeSeq = schema.map(f =>
+      AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
     )
     val logicalPlan = LocalRelation(attributeSeq, data.map(messageToRow[T]))
     new Dataset[Row](spark, logicalPlan, RowEncoder(schema))
