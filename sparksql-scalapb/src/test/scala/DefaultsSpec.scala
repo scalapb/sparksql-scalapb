@@ -1,14 +1,11 @@
 package scalapb.spark
 
 import org.apache.spark.sql.{Row, SparkSession}
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
-class DefaultsSpec
-    extends FlatSpec
-    with MustMatchers
-    with BeforeAndAfterAll
-    with GeneratorDrivenPropertyChecks {
+class DefaultsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
     .builder()
     .appName("ScalaPB Demo")

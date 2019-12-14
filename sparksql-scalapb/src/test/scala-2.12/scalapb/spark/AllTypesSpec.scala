@@ -2,17 +2,19 @@ package scalapb.spark
 
 import org.apache.spark.sql.{Dataset, Encoder, SparkSession}
 import org.scalacheck.Arbitrary
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, MustMatchers}
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.scalatest.BeforeAndAfterAll
 import scalapb.spark.test.{all_types2 => AT2}
 import scalapb.spark.test3.{all_types3 => AT3}
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers
 
 class AllTypesSpec
-    extends FlatSpec
-    with MustMatchers
+    extends AnyFlatSpec
+    with Matchers
     with BeforeAndAfterAll
-    with GeneratorDrivenPropertyChecks {
+    with ScalaCheckDrivenPropertyChecks {
   val spark: SparkSession = SparkSession
     .builder()
     .appName("ScalaPB Demo")
