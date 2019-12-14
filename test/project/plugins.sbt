@@ -10,4 +10,4 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.27")
 
 libraryDependencies += "com.thesamet.scalapb" %% "sparksql-scalapb-gen" % pluginVersion
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.1")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.3.0")
