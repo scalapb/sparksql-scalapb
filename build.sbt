@@ -22,7 +22,7 @@ lazy val sparkSqlScalaPB = project
       "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided",
       "org.apache.spark" %% "spark-sql" % "2.4.4" % "test",
       "org.scalatest" %% "scalatest" % "3.1.0" % "test",
-      "org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.0" % "test",
+      "org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.1" % "test",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3" % "test"
     ),
     inConfig(Test)(
