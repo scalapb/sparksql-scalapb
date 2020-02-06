@@ -19,8 +19,8 @@ lazy val sparkSqlScalaPB = project
     libraryDependencies ++= Seq(
       "org.typelevel" %% "frameless-dataset" % "0.8.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
-      "org.apache.spark" %% "spark-sql" % "2.4.4" % "provided",
-      "org.apache.spark" %% "spark-sql" % "2.4.4" % "test",
+      "org.apache.spark" %% "spark-sql" % "2.4.5" % "provided",
+      "org.apache.spark" %% "spark-sql" % "2.4.5" % "test",
       "org.scalatest" %% "scalatest" % "3.1.0" % "test",
       "org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.1" % "test",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.4" % "test"
