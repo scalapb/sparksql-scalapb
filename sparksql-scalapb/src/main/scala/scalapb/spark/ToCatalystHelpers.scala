@@ -81,9 +81,7 @@ object ToCatalystHelpers {
 
     val (fieldGetter, transform): (Expression, Expression => Expression) =
       if (!isMessage) {
-        (getField, { e: Expression =>
-          singularFieldToCatalyst(fd, e)
-        })
+        (getField, { e: Expression => singularFieldToCatalyst(fd, e) })
       } else {
         (getFieldByNumber, { e: Expression =>
           messageToCatalyst(messageFieldCompanion, e)
