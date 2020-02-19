@@ -96,4 +96,9 @@ class AllTypesSpec
     verifyTypes[AT2.Level1]
     verifyTypes[AT3.Level1]
   }
+
+  it should "work for any" in {
+    verifyTypes[AT2.AnyTest]
+    verifyTypes[AT3.AnyTest]
+  }
 }

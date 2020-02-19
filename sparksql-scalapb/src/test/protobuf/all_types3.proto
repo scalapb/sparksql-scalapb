@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package scalapb.spark.test3;
 
+import "google/protobuf/any.proto";
+
 message Int32Test {
   int32 optional_int32 = 1;
   uint32 optional_uint32 = 2;
@@ -110,4 +112,8 @@ message Level1 {
   }
   Level2 level2 = 1;
   string a = 2;
+}
+
+message AnyTest {
+  google.protobuf.Any any = 1;
 }
