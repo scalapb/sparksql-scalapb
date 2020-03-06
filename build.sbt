@@ -7,15 +7,13 @@ ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
 
 ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
-val Scala211 = "2.11.12"
-
 val Scala212 = "2.12.10"
 
 lazy val sparkSqlScalaPB = project
   .in(file("sparksql-scalapb"))
   .settings(
     name := "sparksql-scalapb",
-    crossScalaVersions := Seq(Scala211, Scala212),
+    crossScalaVersions := Seq(Scala212),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "frameless-dataset" % "0.8.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
