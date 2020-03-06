@@ -9,10 +9,13 @@ scala:
 - 2.12.10
 
 script:
-- sbt ++$TRAVIS_SCALA_VERSION sparkSqlScalaPB/test
 
 jobs:
   include:
+    - name: "Test"
+      scala: 2.12
+      script:
+      - sbt ++$TRAVIS_SCALA_VERSION sparkSqlScalaPB/test
     - name: "Formatting"
       scala: 2.12
       script:
