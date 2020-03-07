@@ -16,10 +16,6 @@ package object spark {
   implicit class ProtoRDD[T <: GeneratedMessage with Message[T]](
       val protoRdd: org.apache.spark.rdd.RDD[T]
   ) extends AnyVal {
-    def saveAsParquet(path: String)(implicit ct: ClassTag[T]): Unit = {
-      ProtoParquet.saveParquet(protoRdd, path)
-    }
-
     def toDataFrame(
         sqlContext: SQLContext
     )(implicit encoder: Encoder[T]): DataFrame = {
