@@ -12,16 +12,20 @@ import org.scalatest.matchers.must.Matchers
 
 case class InnerLike(inner_value: String)
 
+case class AddressLike(street: Option[String], city: Option[String])
+
+case class BaseLike()
+
 case class PersonLike(
     name: String,
     age: Int,
-    addresses: Seq[Address],
+    addresses: Seq[AddressLike],
     gender: String,
     tags: Seq[String] = Seq.empty,
-    base: Option[Base] = None,
+    base: Option[BaseLike] = None,
     inner: Option[InnerLike] = None,
     data: Option[Array[Byte]] = None,
-    address: Option[Address] = None,
+    address: Option[AddressLike] = None,
     nums: Vector[Int] = Vector.empty
 )
 
@@ -137,7 +141,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       gender = "MALE",
       inner = Some(InnerLike("V1")),
       tags = Seq("foo", "bar"),
-      address = Some(Address(Some("Main"), Some("Bar"))),
+      address = Some(AddressLike(Some("Main"), Some("Bar"))),
       nums = Vector(3, 4, 5)
     )
     val p =
@@ -160,8 +164,8 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       name = "Owen M",
       age = 35,
       addresses = Seq(
-        Address(Some("foo"), Some("bar")),
-        Address(Some("baz"), Some("taz"))
+        AddressLike(Some("foo"), Some("bar")),
+        AddressLike(Some("baz"), Some("taz"))
       ),
       gender = "MALE",
       inner = Some(InnerLike("V1")),
@@ -176,7 +180,9 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
         _.gender := Gender.MALE,
         _.inner.innerValue := InnerEnum.V1,
         _.data := ByteString.copyFrom(Array[Byte](1, 2, 3)),
-        _.addresses := pl.addresses
+        _.addresses := pl.addresses.map(a =>
+          Address(city = a.city, street = a.street)
+        )
       )
     )
     spark.createDataset(Seq(Person(gender = Some(Gender.FEMALE)))).toDF().show()

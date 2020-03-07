@@ -16,7 +16,7 @@ import scalapb.descriptors.{PValue, Reads}
 
 import scala.reflect.ClassTag
 
-class MessageTypedEncoder[T <: GeneratedMessage with Message[T]](
+class MessageTypedEncoder[T <: GeneratedMessage](
     implicit cmp: GeneratedMessageCompanion[T],
     ct: ClassTag[T]
 ) extends TypedEncoder[T] {
@@ -109,8 +109,9 @@ class ByteStringTypedEncoder extends TypedEncoder[ByteString] {
 }
 
 trait Implicits {
-  implicit def messageTypedEncoder[T <: GeneratedMessage with Message[T]: GeneratedMessageCompanion: ClassTag]
-      : TypedEncoder[T] = new MessageTypedEncoder[T]
+  implicit def messageTypedEncoder[
+      T <: GeneratedMessage: GeneratedMessageCompanion: ClassTag
+  ]: TypedEncoder[T] = new MessageTypedEncoder[T]
 
   implicit def enumTypedEncoder[T <: GeneratedEnum](
       implicit cmp: GeneratedEnumCompanion[T],

@@ -6,14 +6,14 @@ import scala.reflect.ClassTag
 
 package object spark {
   implicit class ProtoSQLContext(val sqlContext: SQLContext) extends AnyVal {
-    def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
+    def protoToDataFrame[T <: GeneratedMessage: Encoder](
         protoRdd: org.apache.spark.rdd.RDD[T]
     ) = {
       ProtoSQL.protoToDataFrame(sqlContext, protoRdd)
     }
   }
 
-  implicit class ProtoRDD[T <: GeneratedMessage with Message[T]](
+  implicit class ProtoRDD[T <: GeneratedMessage](
       val protoRdd: org.apache.spark.rdd.RDD[T]
   ) extends AnyVal {
     def toDataFrame(

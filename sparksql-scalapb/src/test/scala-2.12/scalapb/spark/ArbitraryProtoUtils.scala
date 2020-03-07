@@ -12,6 +12,8 @@ import scalapb.{
   Message
 }
 import shapeless.Strict
+import org.scalacheck.Gen
+import scalapb.UnknownFieldSet
 
 object ArbitraryProtoUtils {
   import org.scalacheck.ScalacheckShapeless._
@@ -33,6 +35,10 @@ object ArbitraryProtoUtils {
     Arbitrary(implicitly[Arbitrary[A]].arbitrary.map(fixEnum(_)))
   }
 
+  implicit val arbitraryUnknownFields = Arbitrary(
+    Gen.const(UnknownFieldSet.empty)
+  )
+
   implicit val nestedEnum2 = arbitraryEnum[AT2.EnumTest.NestedEnum]
 
   implicit val nestedEnum3 = arbitraryEnum[AT3.EnumTest.NestedEnum]
@@ -41,7 +47,7 @@ object ArbitraryProtoUtils {
 
   implicit val topLevelEnum3 = arbitraryEnum[AT3.TopLevelEnum]
 
-  implicit def arbitraryMessage[A <: GeneratedMessage with Message[A]](
+  implicit def arbitraryMessage[A <: GeneratedMessage](
       implicit ev: Strict[MkArbitrary[A]]
   ) = {
     implicitly[Arbitrary[A]]

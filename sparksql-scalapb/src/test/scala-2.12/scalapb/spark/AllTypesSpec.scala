@@ -26,8 +26,9 @@ class AllTypesSpec
   import spark.implicits.{newProductEncoder => _}
   import Implicits._
 
-  def verifyTypes[T <: GeneratedMessage with Message[T]: Arbitrary: Encoder: GeneratedMessageCompanion]
-      : Unit =
+  def verifyTypes[
+      T <: GeneratedMessage: Arbitrary: Encoder: GeneratedMessageCompanion
+  ]: Unit =
     forAll { (n: Seq[T]) =>
       // ProtoSQL conversion to dataframe
       val df1 = ProtoSQL.createDataFrame(spark, n)

@@ -53,7 +53,7 @@ import scalapb.descriptors.{
 object ProtoSQL {
   import scala.language.existentials
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
+  def protoToDataFrame[T <: GeneratedMessage: Encoder](
       sparkSession: SparkSession,
       protoRdd: org.apache.spark.rdd.RDD[T]
   ): DataFrame = {
@@ -61,14 +61,14 @@ object ProtoSQL {
     FramelessInternals.ofRows(sparkSession, logicalPlan)
   }
 
-  def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](
+  def protoToDataFrame[T <: GeneratedMessage: Encoder](
       sqlContext: SQLContext,
       protoRdd: org.apache.spark.rdd.RDD[T]
   ): DataFrame = {
     protoToDataFrame(sqlContext.sparkSession, protoRdd)
   }
 
-  def schemaFor[T <: GeneratedMessage with Message[T]](
+  def schemaFor[T <: GeneratedMessage](
       implicit cmp: GeneratedMessageCompanion[T]
   ): StructType = {
     StructType(cmp.scalaDescriptor.fields.map(structFieldFor))
@@ -89,7 +89,7 @@ object ProtoSQL {
     case PEmpty       => null
   }
 
-  def messageToRow[T <: GeneratedMessage with Message[T]](
+  def messageToRow[T <: GeneratedMessage](
       msg: T
   ): InternalRow = {
     pMessageToRow(msg.toPMessage)
@@ -127,7 +127,7 @@ object ProtoSQL {
     )
   }
 
-  def createDataFrame[T <: GeneratedMessage with Message[T]: GeneratedMessageCompanion](
+  def createDataFrame[T <: GeneratedMessage: GeneratedMessageCompanion](
       spark: SparkSession,
       data: Seq[T]
   ): DataFrame = {
