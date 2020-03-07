@@ -1,12 +1,23 @@
 package scalapb.parquet
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.Descriptors.FieldDescriptor.JavaType
-import com.google.protobuf.Descriptors.{EnumValueDescriptor, FieldDescriptor}
 import scalapb.{GeneratedMessage, Message}
 import org.apache.parquet.io.api.Binary
 import org.apache.parquet.Log
 import org.apache.parquet.io.api.RecordConsumer
+import scalapb.descriptors.PRepeated
+import scalapb.descriptors.FieldDescriptor
+import scalapb.descriptors.PValue
+import scalapb.descriptors.PBoolean
+import scalapb.descriptors.PByteString
+import scalapb.descriptors.PDouble
+import scalapb.descriptors.PEmpty
+import scalapb.descriptors.PEnum
+import scalapb.descriptors.PFloat
+import scalapb.descriptors.PInt
+import scalapb.descriptors.PLong
+import scalapb.descriptors.PMessage
+import scalapb.descriptors.PString
 
 object MessageWriter {
   val log = Log.getLog(this.getClass)
@@ -24,47 +35,32 @@ object MessageWriter {
       consumer: RecordConsumer,
       m: T
   ): Unit = {
-    m.getAllFields.foreach {
-      case (fd, value) =>
-        consumer.startField(fd.getName, fd.getIndex)
-        if (fd.isRepeated) {
-          value.asInstanceOf[Seq[Any]].foreach { v =>
-            writeSingleField(consumer, fd, v)
-          }
-        } else {
-          writeSingleField(consumer, fd, value)
-        }
-        consumer.endField(fd.getName, fd.getIndex)
-    }
+    writeSingleField(consumer, m.toPMessage)
   }
 
   private def writeSingleField(
       consumer: RecordConsumer,
-      fd: FieldDescriptor,
-      v: Any
-  ) = fd.getJavaType match {
-    case JavaType.BOOLEAN => consumer.addBoolean(v.asInstanceOf[Boolean])
-    case JavaType.INT     => consumer.addInteger(v.asInstanceOf[Int])
-    case JavaType.LONG    => consumer.addLong(v.asInstanceOf[Long])
-    case JavaType.FLOAT   => consumer.addFloat(v.asInstanceOf[Float])
-    case JavaType.DOUBLE  => consumer.addDouble(v.asInstanceOf[Double])
-    case JavaType.BYTE_STRING =>
-      consumer.addBinary(
-        Binary.fromByteArray(v.asInstanceOf[ByteString].toByteArray)
-      )
-    case JavaType.STRING =>
-      consumer.addBinary(Binary.fromString(v.asInstanceOf[String]))
-    case JavaType.MESSAGE =>
+      v: PValue
+  ): Unit = v match {
+    case PBoolean(value) => consumer.addBoolean(value)
+    case PByteString(value) => consumer.addBinary(Binary.fromByteArray(value.toByteArray()))
+    case PDouble(value) => consumer.addDouble(value)
+    case PEmpty => throw new RuntimeException("Should not happen")
+    case PEnum(value) => consumer.addBinary(Binary.fromString(value.name))
+    case PFloat(value) => consumer.addFloat(value)
+    case PDouble(value) => consumer.addDouble(value)
+    case PInt(value) => consumer.addInteger(value)
+    case PLong(value) => consumer.addLong(value)
+    case PMessage(value) =>
       consumer.startGroup()
-      writeAllFields(consumer, v.asInstanceOf[GeneratedMessage])
-      consumer.endGroup()
-    case JavaType.ENUM =>
-      consumer.addBinary(
-        Binary.fromString(v.asInstanceOf[EnumValueDescriptor].getName)
-      )
-    case javaType =>
-      throw new UnsupportedOperationException(
-        "Cannot convert Protocol Buffer: unknown type " + javaType
-      )
+      value.foreach {
+        case (fd, PEmpty) => // skip
+        case (fd, v) =>
+          consumer.startField(fd.name, fd.index)
+          writeSingleField(consumer, v)
+          consumer.endField(fd.name, fd.index)
+      }
+    case PRepeated(value) => value.foreach(writeSingleField(consumer, _))
+    case PString(value) => consumer.addBinary(Binary.fromString(value))
   }
 }
