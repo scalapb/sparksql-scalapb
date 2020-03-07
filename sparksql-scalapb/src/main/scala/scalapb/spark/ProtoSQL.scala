@@ -50,7 +50,7 @@ import scalapb.descriptors.{
   ScalaType
 }
 
-object ProtoSQL {
+object ProtoSQL extends Udfs {
   import scala.language.existentials
 
   def protoToDataFrame[T <: GeneratedMessage with Message[T]: Encoder](

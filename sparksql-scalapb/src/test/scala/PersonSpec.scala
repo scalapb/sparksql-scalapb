@@ -2,7 +2,14 @@ package scalapb.spark
 
 import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
-import com.example.protos.demo.{Address, Gender, Person, SimplePerson}
+import com.example.protos.demo.{
+  Address,
+  Event,
+  Hit,
+  Gender,
+  Person,
+  SimplePerson
+}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
 import org.scalatest.events.TestPending
@@ -262,5 +269,22 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
     val bs: Dataset[Array[Byte]] = spark.createDataset(s).map(_.toByteArray)
     bs.map(Person.parseFrom).collect() must contain theSameElementsAs (s)
+  }
+
+  "UDFs that involve protos" should "work when using ProtoSQL.udfs" in {
+    val h1 = Hit(
+      id = Some(ByteString.copyFrom(Array[Byte](112, 75, 6))),
+      target = Some("foo")
+    )
+    val events: Seq[Event] =
+      Seq(
+        Event(
+          eventId = Some("xyz"),
+          action = Some(com.google.protobuf.any.Any.pack(h1))
+        )
+      )
+    val df = ProtoSQL.createDataFrame(spark, events)
+    val parseHit = ProtoSQL.udf { s: Array[Byte] => Hit.parseFrom(s) }
+    df.withColumn("foo", parseHit($"action.value")).show()
   }
 }
