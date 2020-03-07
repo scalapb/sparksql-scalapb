@@ -3,6 +3,7 @@ syntax = "proto2";
 option java_package = "com.example.protos";
 
 import "base.proto";
+import "google/protobuf/any.proto";
 
 enum Gender {
   MALE = 1;
@@ -40,4 +41,14 @@ message Person {
   }
   optional Inner inner = 7;
   optional bytes data = 8;
+}
+
+message Event {
+  optional string eventId = 1;
+  optional google.protobuf.Any action = 2;
+}
+
+message Hit {
+  optional bytes id = 1;
+  optional string target = 2;
 }
