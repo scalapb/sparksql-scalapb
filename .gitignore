@@ -18,3 +18,4 @@ project/plugins/project/
 .idea
 .bloop
 .metals
+metals.sbt
