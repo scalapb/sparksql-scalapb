@@ -9,6 +9,7 @@ import scalapb.spark.test3.{all_types3 => AT3}
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
+import scala.reflect.ClassTag
 
 class AllTypesSpec
     extends AnyFlatSpec
@@ -24,14 +25,17 @@ class AllTypesSpec
   import ArbitraryProtoUtils._
   import org.scalacheck.ScalacheckShapeless._
   import spark.implicits.{newProductEncoder => _}
-  import Implicits._
 
   def verifyTypes[
-      T <: GeneratedMessage: Arbitrary: Encoder: GeneratedMessageCompanion
-  ]: Unit =
+      T <: GeneratedMessage: Arbitrary: GeneratedMessageCompanion: ClassTag
+  ](
+      protoSQL: ProtoSQL
+  ): Unit =
     forAll { (n: Seq[T]) =>
+      import protoSQL.implicits._
+
       // ProtoSQL conversion to dataframe
-      val df1 = ProtoSQL.createDataFrame(spark, n)
+      val df1 = protoSQL.createDataFrame(spark, n)
 
       // Creates dataset using encoder deserialization:
       val ds1: Dataset[T] = df1.as[T]
@@ -42,6 +46,11 @@ class AllTypesSpec
       ds2.collect() must contain theSameElementsAs (n)
       ds2.toDF.coalesce(1).except(df1.coalesce(1)).count() must be(0)
     }
+
+  def verifyTypes[
+      T <: GeneratedMessage: Arbitrary: GeneratedMessageCompanion: ClassTag
+  ]: Unit =
+    verifyTypes[T](ProtoSQL)
 
   "AllTypes" should "work for int32" in {
     verifyTypes[AT2.Int32Test]
@@ -101,5 +110,10 @@ class AllTypesSpec
   it should "work for any" in {
     verifyTypes[AT2.AnyTest]
     verifyTypes[AT3.AnyTest]
+  }
+
+  it should "work for wrapper types" in {
+    verifyTypes[AT3.WrappersTest]
+    verifyTypes[AT3.WrappersTest](ProtoSQL.withPrimitiveWrappers)
   }
 }

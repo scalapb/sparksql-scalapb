@@ -49,8 +49,11 @@ import scalapb.descriptors.{
   PValue,
   ScalaType
 }
+import scalapb.descriptors.Descriptor
+import com.google.protobuf.wrappers.Int32Value
 
-object ProtoSQL extends Udfs {
+trait ProtoSQL {
+  self: WrapperTypes =>
   import scala.language.existentials
 
   def protoToDataFrame[T <: GeneratedMessage: Encoder](
@@ -70,11 +73,15 @@ object ProtoSQL extends Udfs {
 
   def schemaFor[T <: GeneratedMessage](
       implicit cmp: GeneratedMessageCompanion[T]
-  ): StructType = {
-    StructType(cmp.scalaDescriptor.fields.map(structFieldFor))
-  }
+  ): DataType = schemaFor(cmp.scalaDescriptor)
 
-  private def toRowData(pvalue: PValue): Any = pvalue match {
+  def schemaFor(descriptor: Descriptor): DataType =
+    types.get(descriptor) match {
+      case Some(dt) => dt
+      case _        => StructType(descriptor.fields.map(structFieldFor))
+    }
+
+  def toRowData(fd: FieldDescriptor, pvalue: PValue): Any = pvalue match {
     case PString(value)     => UTF8String.fromString(value)
     case PInt(value)        => value
     case PLong(value)       => value
@@ -82,26 +89,44 @@ object ProtoSQL extends Udfs {
     case PFloat(value)      => value
     case PBoolean(value)    => value
     case PByteString(value) => value.toByteArray
-    case value: PMessage    => pMessageToRow(value)
+    case value: PMessage =>
+      pMessageToRowOrAny(
+        fd.scalaType.asInstanceOf[ScalaType.Message].descriptor,
+        value
+      )
     case PRepeated(value) =>
-      new GenericArrayData(value.map(toRowData)) // value.map(toRowData)
+      new GenericArrayData(value.map(toRowData(fd, _)))
     case penum: PEnum => JavaHelpers.penumToString(penum)
     case PEmpty       => null
   }
 
   def messageToRow[T <: GeneratedMessage](
       msg: T
-  ): InternalRow = {
-    pMessageToRow(msg.toPMessage)
+  )(implicit cmp: GeneratedMessageCompanion[T]): InternalRow = {
+    pMessageToRow(cmp.scalaDescriptor, msg.toPMessage)
   }
 
-  def pMessageToRow(msg: PMessage): InternalRow = {
-    InternalRow(
-      msg.value.toVector
-        .sortBy(_._1.index)
-        .map(entry => toRowData(entry._2)): _*
-    )
-  }
+  def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any =
+    if (types.contains(descriptor))
+      (for {
+        fd <- descriptor.findFieldByName("value")
+        value <- msg.value.get(fd)
+      } yield toRowData(fd, value)).getOrElse(
+        throw new RuntimeException(
+          "Could not get value out of primitive wrapper"
+        )
+      )
+    else pMessageToRow(descriptor, msg)
+
+  def pMessageToRow(descriptor: Descriptor, msg: PMessage): InternalRow =
+    descriptor.fullName match {
+      case _ =>
+        InternalRow(
+          msg.value.toVector
+            .sortBy(_._1.index)
+            .map(entry => toRowData(entry._1, entry._2)): _*
+        )
+    }
 
   def singularDataType(fd: FieldDescriptor): DataType = fd.scalaType match {
     case ScalaType.Int         => IntegerType
@@ -111,7 +136,7 @@ object ProtoSQL extends Udfs {
     case ScalaType.Boolean     => BooleanType
     case ScalaType.String      => StringType
     case ScalaType.ByteString  => BinaryType
-    case ScalaType.Message(md) => StructType(md.fields.map(structFieldFor))
+    case ScalaType.Message(md) => schemaFor(md)
     case _: ScalaType.Enum     => StringType
   }
 
@@ -131,11 +156,25 @@ object ProtoSQL extends Udfs {
       spark: SparkSession,
       data: Seq[T]
   ): DataFrame = {
-    val schema = ProtoSQL.schemaFor[T]
-    val attributeSeq = schema.map(f =>
-      AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
-    )
-    val logicalPlan = LocalRelation(attributeSeq, data.map(messageToRow[T]))
-    new Dataset[Row](spark, logicalPlan, RowEncoder(schema))
+    val schema = schemaFor[T]
+    schema match {
+      case schema: StructType =>
+        val attributeSeq = schema.map(f =>
+          AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
+        )
+        val logicalPlan = LocalRelation(attributeSeq, data.map(messageToRow[T]))
+        new Dataset[Row](spark, logicalPlan, RowEncoder(schema))
+      case _ => ???
+    }
   }
+
+  val implicits: Implicits = new Implicits {
+    val typedEncoders = new TypedEncoders {
+      val protoSql = self
+    }
+  }
+}
+
+object ProtoSQL extends ProtoSQL with Udfs with NoWrapperTypes {
+  val withPrimitiveWrappers = new ProtoSQL with Udfs with AllWrapperTypes
 }
