@@ -16,28 +16,34 @@ import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
 
-object ToCatalystHelpers {
+trait ToCatalystHelpers {
+  def protoSql: ProtoSQL with WrapperTypes
+
   def messageToCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
-  ): Expression = {
-    val nameExprs = cmp.scalaDescriptor.fields.map { field =>
-      Literal(field.name)
-    }
+  ): Expression =
+    if (protoSql.types.contains(cmp.scalaDescriptor)) {
+      val fd = cmp.scalaDescriptor.fields(0)
+      fieldToCatalyst(cmp, fd, input)
+    } else {
+      val nameExprs = cmp.scalaDescriptor.fields.map { field =>
+        Literal(field.name)
+      }
 
-    val valueExprs = cmp.scalaDescriptor.fields.map { field =>
-      ToCatalystHelpers.fieldToCatalyst(cmp, field, input)
-    }
+      val valueExprs = cmp.scalaDescriptor.fields.map { field =>
+        fieldToCatalyst(cmp, field, input)
+      }
 
-    // the way exprs are encoded in CreateNamedStruct
-    val exprs = nameExprs.zip(valueExprs).flatMap {
-      case (nameExpr, valueExpr) => nameExpr :: valueExpr :: Nil
-    }
+      // the way exprs are encoded in CreateNamedStruct
+      val exprs = nameExprs.zip(valueExprs).flatMap {
+        case (nameExpr, valueExpr) => nameExpr :: valueExpr :: Nil
+      }
 
-    val createExpr = CreateNamedStruct(exprs)
-    val nullExpr = Literal.create(null, createExpr.dataType)
-    If(IsNull(input), nullExpr, createExpr)
-  }
+      val createExpr = CreateNamedStruct(exprs)
+      val nullExpr = Literal.create(null, createExpr.dataType)
+      If(IsNull(input), nullExpr, createExpr)
+    }
 
   def fieldToCatalyst(
       cmp: GeneratedMessageCompanion[_],
@@ -114,7 +120,7 @@ object ToCatalystHelpers {
             "isEmpty",
             getField :: Nil
           ),
-          Literal.create(null, ProtoSQL.dataTypeFor(fd)),
+          Literal.create(null, protoSql.dataTypeFor(fd)),
           transform(fieldGetter)
         )
     }
@@ -138,7 +144,7 @@ object ToCatalystHelpers {
     }
     StaticInvoke(
       JavaHelpers.getClass,
-      ProtoSQL.singularDataType(fd),
+      protoSql.singularDataType(fd),
       obj,
       input :: Nil
     )

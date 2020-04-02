@@ -24,15 +24,23 @@ import org.apache.spark.sql.types.ObjectType
 import scalapb.GeneratedMessageCompanion
 import scalapb.descriptors._
 
-object FromCatalystHelpers {
+trait FromCatalystHelpers {
+  def protoSql: ProtoSQL with WrapperTypes
+
   def pmessageFromCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
-    val args = cmp.scalaDescriptor.fields.map { fd =>
-      val newPath = addToPath(input, fd.name)
-      fieldFromCatalyst(cmp, fd, newPath)
-    }
+    val args =
+      if (protoSql.types.contains(cmp.scalaDescriptor))
+        cmp.scalaDescriptor.fields.map { fd =>
+          fieldFromCatalyst(cmp, fd, input)
+        }
+      else
+        cmp.scalaDescriptor.fields.map { fd =>
+          val newPath = addToPath(input, fd.name)
+          fieldFromCatalyst(cmp, fd, newPath)
+        }
     StaticInvoke(
       JavaHelpers.getClass,
       ObjectType(classOf[PValue]),
@@ -50,7 +58,7 @@ object FromCatalystHelpers {
       val objs = MapObjects(
         (input: Expression) => singleFieldValueFromCatalyst(cmp, fd, input),
         input,
-        ProtoSQL.singularDataType(fd)
+        protoSql.singularDataType(fd)
       )
       StaticInvoke(
         JavaHelpers.getClass,

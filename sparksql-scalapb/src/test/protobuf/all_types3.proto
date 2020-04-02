@@ -3,6 +3,7 @@ syntax = "proto3";
 package scalapb.spark.test3;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
 
 message Int32Test {
   int32 optional_int32 = 1;
@@ -116,4 +117,26 @@ message Level1 {
 
 message AnyTest {
   google.protobuf.Any any = 1;
+}
+
+message WrappersTest {
+  google.protobuf.BoolValue bool_value = 1;
+  google.protobuf.BytesValue bytes_value = 2;
+  google.protobuf.DoubleValue double_value = 3;
+  google.protobuf.FloatValue float_value = 4;
+  google.protobuf.Int32Value int32_value = 5;
+  google.protobuf.Int64Value int64_value = 6;
+  google.protobuf.StringValue string_value = 7;
+  google.protobuf.UInt32Value uint32_value = 8;
+  google.protobuf.UInt64Value uint64_Value = 9;
+
+  repeated google.protobuf.BoolValue bool_repeated_Value = 11;
+  repeated google.protobuf.BytesValue bytes_repeated_Value = 12;
+  repeated google.protobuf.DoubleValue double_repeated_Value = 13;
+  repeated google.protobuf.FloatValue float_repeated_Value = 14;
+  repeated google.protobuf.Int32Value int32_repeated_Value = 15;
+  repeated google.protobuf.Int64Value int64_repeated_Value = 16;
+  repeated google.protobuf.StringValue string_repeated_Value = 17;
+  repeated google.protobuf.UInt32Value uint32_repeated_Value = 18;
+  repeated google.protobuf.UInt64Value uint64_repeated_Value = 19;
 }
