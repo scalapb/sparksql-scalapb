@@ -2,4 +2,4 @@
 
 This library provides utilities to work with ScalaPB in SparkSQL.
 
-Adapted from: https://github.com/saurfang/sparksql-protobuf
+See docs at https://scalapb.github.io/sparksql.html
