@@ -24,8 +24,8 @@ trait WrapperTypes {
 trait AllWrapperTypes extends WrapperTypes {
   self: ProtoSQL =>
 
-  private def buildWrapper[T <: GeneratedMessage](
-      implicit cmp: GeneratedMessageCompanion[T]
+  private def buildWrapper[T <: GeneratedMessage](implicit
+      cmp: GeneratedMessageCompanion[T]
   ) = {
     cmp.scalaDescriptor -> dataTypeFor(
       cmp.scalaDescriptor.fields.find(_.name == "value").get

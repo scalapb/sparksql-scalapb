@@ -50,38 +50,40 @@ trait ToCatalystHelpers {
       fd: FieldDescriptor,
       inputObject: Expression
   ): Expression = {
-    def getField = Invoke(
-      inputObject,
-      "getField",
-      ObjectType(classOf[PValue]),
+    def getField =
       Invoke(
+        inputObject,
+        "getField",
+        ObjectType(classOf[PValue]),
         Invoke(
           Invoke(
-            Literal.fromObject(cmp),
-            "scalaDescriptor",
-            ObjectType(classOf[Descriptor]),
-            Nil
+            Invoke(
+              Literal.fromObject(cmp),
+              "scalaDescriptor",
+              ObjectType(classOf[Descriptor]),
+              Nil
+            ),
+            "findFieldByNumber",
+            ObjectType(classOf[Option[_]]),
+            Literal(fd.number) :: Nil
           ),
-          "findFieldByNumber",
-          ObjectType(classOf[Option[_]]),
-          Literal(fd.number) :: Nil
-        ),
-        "get",
-        ObjectType(classOf[FieldDescriptor])
-      ) :: Nil
-    )
+          "get",
+          ObjectType(classOf[FieldDescriptor])
+        ) :: Nil
+      )
 
     def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
 
-    def getFieldByNumber = Invoke(
-      inputObject,
-      "getFieldByNumber",
-      if (fd.isRepeated)
-        ObjectType(classOf[Seq[_]])
-      else
-        ObjectType(messageFieldCompanion.defaultInstance.getClass),
-      Literal(fd.number, IntegerType) :: Nil
-    )
+    def getFieldByNumber =
+      Invoke(
+        inputObject,
+        "getFieldByNumber",
+        if (fd.isRepeated)
+          ObjectType(classOf[Seq[_]])
+        else
+          ObjectType(messageFieldCompanion.defaultInstance.getClass),
+        Literal(fd.number, IntegerType) :: Nil
+      )
 
     val isMessage = fd.scalaType.isInstanceOf[ScalaType.Message]
 
@@ -89,9 +91,12 @@ trait ToCatalystHelpers {
       if (!isMessage) {
         (getField, { e: Expression => singularFieldToCatalyst(fd, e) })
       } else {
-        (getFieldByNumber, { e: Expression =>
-          messageToCatalyst(messageFieldCompanion, e)
-        })
+        (
+          getFieldByNumber,
+          { e: Expression =>
+            messageToCatalyst(messageFieldCompanion, e)
+          }
+        )
       }
 
     if (fd.isRepeated) {
