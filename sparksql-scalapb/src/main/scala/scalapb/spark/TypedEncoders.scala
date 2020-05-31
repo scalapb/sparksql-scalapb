@@ -17,8 +17,8 @@ import scalapb.descriptors.{PValue, Reads}
 import scala.reflect.ClassTag
 
 trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers {
-  class MessageTypedEncoder[T <: GeneratedMessage](
-      implicit cmp: GeneratedMessageCompanion[T],
+  class MessageTypedEncoder[T <: GeneratedMessage](implicit
+      cmp: GeneratedMessageCompanion[T],
       ct: ClassTag[T]
   ) extends TypedEncoder[T] {
     override def nullable: Boolean = false
@@ -57,8 +57,8 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers {
     }
   }
 
-  class EnumTypedEncoder[T <: GeneratedEnum](
-      implicit cmp: GeneratedEnumCompanion[T],
+  class EnumTypedEncoder[T <: GeneratedEnum](implicit
+      cmp: GeneratedEnumCompanion[T],
       ct: ClassTag[T]
   ) extends TypedEncoder[T] {
     override def nullable: Boolean = false
@@ -98,12 +98,13 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers {
 
     override def catalystRepr: DataType = BinaryType
 
-    override def fromCatalyst(path: Expression): Expression = StaticInvoke(
-      classOf[ByteString],
-      ObjectType(classOf[ByteString]),
-      "copyFrom",
-      path :: Nil
-    )
+    override def fromCatalyst(path: Expression): Expression =
+      StaticInvoke(
+        classOf[ByteString],
+        ObjectType(classOf[ByteString]),
+        "copyFrom",
+        path :: Nil
+      )
 
     override def toCatalyst(path: Expression): Expression =
       Invoke(path, "toByteArray", BinaryType, Seq.empty)
@@ -117,15 +118,15 @@ trait Implicits {
       T <: GeneratedMessage: GeneratedMessageCompanion: ClassTag
   ]: TypedEncoder[T] = new typedEncoders.MessageTypedEncoder[T]
 
-  implicit def enumTypedEncoder[T <: GeneratedEnum](
-      implicit cmp: GeneratedEnumCompanion[T],
+  implicit def enumTypedEncoder[T <: GeneratedEnum](implicit
+      cmp: GeneratedEnumCompanion[T],
       ct: ClassTag[T]
   ): TypedEncoder[T] = new typedEncoders.EnumTypedEncoder[T]
 
   implicit def byteStringTypedEncoder = typedEncoders.ByteStringTypedEncoder
 
-  implicit def typedEncoderToEncoder[T: ClassTag](
-      implicit ev: TypedEncoder[T]
+  implicit def typedEncoderToEncoder[T: ClassTag](implicit
+      ev: TypedEncoder[T]
   ): Encoder[T] =
     TypedExpressionEncoder(ev)
 }
