@@ -47,8 +47,8 @@ object ArbitraryProtoUtils {
 
   implicit val topLevelEnum3 = arbitraryEnum[AT3.TopLevelEnum]
 
-  implicit def arbitraryMessage[A <: GeneratedMessage](
-      implicit ev: Strict[MkArbitrary[A]]
+  implicit def arbitraryMessage[A <: GeneratedMessage](implicit
+      ev: Strict[MkArbitrary[A]]
   ) = {
     implicitly[Arbitrary[A]]
   }
