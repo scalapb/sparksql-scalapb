@@ -71,8 +71,8 @@ trait ProtoSQL {
     protoToDataFrame(sqlContext.sparkSession, protoRdd)
   }
 
-  def schemaFor[T <: GeneratedMessage](
-      implicit cmp: GeneratedMessageCompanion[T]
+  def schemaFor[T <: GeneratedMessage](implicit
+      cmp: GeneratedMessageCompanion[T]
   ): DataType = schemaFor(cmp.scalaDescriptor)
 
   def schemaFor(descriptor: Descriptor): DataType =
@@ -81,24 +81,25 @@ trait ProtoSQL {
       case _        => StructType(descriptor.fields.map(structFieldFor))
     }
 
-  def toRowData(fd: FieldDescriptor, pvalue: PValue): Any = pvalue match {
-    case PString(value)     => UTF8String.fromString(value)
-    case PInt(value)        => value
-    case PLong(value)       => value
-    case PDouble(value)     => value
-    case PFloat(value)      => value
-    case PBoolean(value)    => value
-    case PByteString(value) => value.toByteArray
-    case value: PMessage =>
-      pMessageToRowOrAny(
-        fd.scalaType.asInstanceOf[ScalaType.Message].descriptor,
-        value
-      )
-    case PRepeated(value) =>
-      new GenericArrayData(value.map(toRowData(fd, _)))
-    case penum: PEnum => JavaHelpers.penumToString(penum)
-    case PEmpty       => null
-  }
+  def toRowData(fd: FieldDescriptor, pvalue: PValue): Any =
+    pvalue match {
+      case PString(value)     => UTF8String.fromString(value)
+      case PInt(value)        => value
+      case PLong(value)       => value
+      case PDouble(value)     => value
+      case PFloat(value)      => value
+      case PBoolean(value)    => value
+      case PByteString(value) => value.toByteArray
+      case value: PMessage =>
+        pMessageToRowOrAny(
+          fd.scalaType.asInstanceOf[ScalaType.Message].descriptor,
+          value
+        )
+      case PRepeated(value) =>
+        new GenericArrayData(value.map(toRowData(fd, _)))
+      case penum: PEnum => JavaHelpers.penumToString(penum)
+      case PEmpty       => null
+    }
 
   def messageToRow[T <: GeneratedMessage](
       msg: T
@@ -128,17 +129,18 @@ trait ProtoSQL {
         )
     }
 
-  def singularDataType(fd: FieldDescriptor): DataType = fd.scalaType match {
-    case ScalaType.Int         => IntegerType
-    case ScalaType.Long        => LongType
-    case ScalaType.Float       => FloatType
-    case ScalaType.Double      => DoubleType
-    case ScalaType.Boolean     => BooleanType
-    case ScalaType.String      => StringType
-    case ScalaType.ByteString  => BinaryType
-    case ScalaType.Message(md) => schemaFor(md)
-    case _: ScalaType.Enum     => StringType
-  }
+  def singularDataType(fd: FieldDescriptor): DataType =
+    fd.scalaType match {
+      case ScalaType.Int         => IntegerType
+      case ScalaType.Long        => LongType
+      case ScalaType.Float       => FloatType
+      case ScalaType.Double      => DoubleType
+      case ScalaType.Boolean     => BooleanType
+      case ScalaType.String      => StringType
+      case ScalaType.ByteString  => BinaryType
+      case ScalaType.Message(md) => schemaFor(md)
+      case _: ScalaType.Enum     => StringType
+    }
 
   def dataTypeFor(fd: FieldDescriptor): DataType =
     if (fd.isRepeated) ArrayType(singularDataType(fd), containsNull = false)
