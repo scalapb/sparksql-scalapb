@@ -293,4 +293,39 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     val parseHit = ProtoSQL.udf { s: Array[Byte] => Hit.parseFrom(s) }
     df.withColumn("foo", parseHit($"action.value")).show()
   }
+
+  "aggregator should work" should "work" in {
+    val df = ProtoSQL.createDataFrame(
+      spark,
+      Seq(
+        Address(Some("foo"), Some("bar")),
+        Address(Some("baz"), Some("taz"))
+      )
+    )
+
+    val agg = AddressAggregator.toColumn.name("agg")
+
+    df.as[Address].select(agg).collect() must contain theSameElementsAs (
+      Array(Address())
+    )
+  }
+
+  "aggregator with group by should work" should "work" in {
+    val df = ProtoSQL.createDataFrame(
+      spark,
+      Seq(
+        Address(Some("foo"), Some("bar")),
+        Address(Some("baz"), Some("taz"))
+      )
+    )
+
+    val agg = AddressAggregator.toColumn.name("agg")
+
+    df.as[Address]
+      .groupBy($"street")
+      .agg(agg)
+      .collect() must contain theSameElementsAs (
+      Array(Address())
+    )
+  }
 }
