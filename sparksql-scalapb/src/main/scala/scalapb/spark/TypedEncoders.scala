@@ -16,7 +16,10 @@ import scalapb.descriptors.{PValue, Reads}
 
 import scala.reflect.ClassTag
 
-trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Serializable {
+trait TypedEncoders
+    extends FromCatalystHelpers
+    with ToCatalystHelpers
+    with Serializable {
   class MessageTypedEncoder[T <: GeneratedMessage](implicit
       cmp: GeneratedMessageCompanion[T],
       ct: ClassTag[T]
