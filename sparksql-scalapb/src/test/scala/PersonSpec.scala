@@ -287,4 +287,35 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     val parseHit = ProtoSQL.udf { s: Array[Byte] => Hit.parseFrom(s) }
     df.withColumn("foo", parseHit($"action.value")).show()
   }
+
+  "UDFs that returns protos" should "work when using ProtoSQL.createDataFrame" in {
+    val h1 = Hit(
+      id = Some(ByteString.copyFrom(Array[Byte](112, 75, 6))),
+      target = Some("foo")
+    )
+
+    val events: Seq[Address] =
+      Seq(
+        Address()
+      )
+    val df = ProtoSQL.createDataFrame(spark, events)
+
+    val returnAddress = ProtoSQL.udf { s: String => Address() }
+
+    df.withColumn("address", returnAddress($"street"))
+      .write
+      .mode("overwrite")
+      .save("/tmp/address1")
+  }
+
+  "UDFs that returns protos" should "work when reading local files" in {
+    val df = spark.read.json("./sparksql-scalapb/src/test/assets/address.json")
+
+    val returnAddress = ProtoSQL.udf { s: String => Address() }
+
+    df.withColumn("address", returnAddress($"foo"))
+      .write
+      .mode("overwrite")
+      .save("/tmp/address2")
+  }
 }

@@ -16,7 +16,10 @@ import scalapb.descriptors.{PValue, Reads}
 
 import scala.reflect.ClassTag
 
-trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers {
+trait TypedEncoders
+    extends FromCatalystHelpers
+    with ToCatalystHelpers
+    with Serializable {
   class MessageTypedEncoder[T <: GeneratedMessage with Message[T]](
       implicit cmp: GeneratedMessageCompanion[T],
       ct: ClassTag[T]
@@ -131,6 +134,7 @@ trait Implicits {
 
 object Implicits extends Implicits {
   private[scalapb] val typedEncoders: TypedEncoders = new TypedEncoders {
-    val protoSql = ProtoSQL
+    @transient
+    lazy val protoSql = ProtoSQL
   }
 }
