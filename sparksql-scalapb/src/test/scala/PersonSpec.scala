@@ -311,7 +311,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     df.withColumn("address", returnAddress($"street"))
       .write
       .mode("overwrite")
-      .save("/tmp/address2")
+      .save("/tmp/address1")
   }
 
   "UDFs that returns protos" should "work when reading local files" in {
@@ -322,6 +322,6 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     df.withColumn("address", returnAddress($"foo"))
       .write
       .mode("overwrite")
-      .save("/tmp/address1")
+      .save("/tmp/address2")
   }
 }
