@@ -2,10 +2,7 @@ package scalapb.spark
 
 import org.apache.spark.sql.catalyst.{InternalRow, ScalaReflection}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.{
-  AttributeReference,
-  GenericInternalRow
-}
+import org.apache.spark.sql.catalyst.expressions.{AttributeReference, GenericInternalRow}
 import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
 import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.execution.ExternalRDD
@@ -161,9 +158,8 @@ trait ProtoSQL {
     val schema = schemaFor[T]
     schema match {
       case schema: StructType =>
-        val attributeSeq = schema.map(f =>
-          AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
-        )
+        val attributeSeq =
+          schema.map(f => AttributeReference(f.name, f.dataType, f.nullable, f.metadata)())
         val logicalPlan = LocalRelation(attributeSeq, data.map(messageToRow[T]))
         new Dataset[Row](spark, logicalPlan, RowEncoder(schema))
       case _ => ???

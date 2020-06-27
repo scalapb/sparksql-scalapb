@@ -2,14 +2,7 @@ package scalapb.spark
 
 import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
-import com.example.protos.demo.{
-  Address,
-  Event,
-  Hit,
-  Gender,
-  Person,
-  SimplePerson
-}
+import com.example.protos.demo.{Address, Event, Hit, Gender, Person, SimplePerson}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
 import org.scalatest.events.TestPending
@@ -187,9 +180,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
         _.gender := Gender.MALE,
         _.inner.innerValue := InnerEnum.V1,
         _.data := ByteString.copyFrom(Array[Byte](1, 2, 3)),
-        _.addresses := pl.addresses.map(a =>
-          Address(city = a.city, street = a.street)
-        )
+        _.addresses := pl.addresses.map(a => Address(city = a.city, street = a.street))
       )
     )
     spark.createDataset(Seq(Person(gender = Some(Gender.FEMALE)))).toDF().show()

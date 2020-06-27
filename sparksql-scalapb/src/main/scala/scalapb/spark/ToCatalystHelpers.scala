@@ -1,10 +1,6 @@
 package scalapb.spark
 
-import org.apache.spark.sql.catalyst.expressions.objects.{
-  Invoke,
-  MapObjects,
-  StaticInvoke
-}
+import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, StaticInvoke}
 import org.apache.spark.sql.catalyst.expressions.{
   CreateNamedStruct,
   Expression,

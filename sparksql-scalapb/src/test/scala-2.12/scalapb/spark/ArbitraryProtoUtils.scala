@@ -5,12 +5,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.derive.MkArbitrary
 import scalapb.spark.test.{all_types2 => AT2}
 import scalapb.spark.test3.{all_types3 => AT3}
-import scalapb.{
-  GeneratedEnum,
-  GeneratedEnumCompanion,
-  GeneratedMessage,
-  Message
-}
+import scalapb.{GeneratedEnum, GeneratedEnumCompanion, GeneratedMessage, Message}
 import shapeless.Strict
 import org.scalacheck.Gen
 import scalapb.UnknownFieldSet

@@ -6,12 +6,11 @@ import frameless.TypedColumn
 import frameless.functions.FramelessUdf
 
 trait Udfs {
-  def udf[RT: TypedEncoder, A1: TypedEncoder](f: A1 => RT): Column => Column = {
-    u1 =>
-      val inputs = new TypedColumn[Any, A1](u1) :: Nil
-      new Column(
-        FramelessUdf(f, inputs, TypedEncoder[RT])
-      )
+  def udf[RT: TypedEncoder, A1: TypedEncoder](f: A1 => RT): Column => Column = { u1 =>
+    val inputs = new TypedColumn[Any, A1](u1) :: Nil
+    new Column(
+      FramelessUdf(f, inputs, TypedEncoder[RT])
+    )
   }
 
   def udf[RT: TypedEncoder, A1: TypedEncoder, A2: TypedEncoder](
@@ -73,18 +72,17 @@ trait Udfs {
       A5: TypedEncoder
   ](
       f: (A1, A2, A3, A4, A5) => RT
-  ): (Column, Column, Column, Column, Column) => Column = {
-    (u1, u2, u3, u4, u5) =>
-      val inputs =
-        new TypedColumn[Any, A1](u1) ::
-          new TypedColumn[Any, A2](u2) ::
-          new TypedColumn[Any, A3](u3) ::
-          new TypedColumn[Any, A4](u4) ::
-          new TypedColumn[Any, A5](u5) ::
-          Nil
-      new Column(
-        FramelessUdf(f, inputs, TypedEncoder[RT])
-      )
+  ): (Column, Column, Column, Column, Column) => Column = { (u1, u2, u3, u4, u5) =>
+    val inputs =
+      new TypedColumn[Any, A1](u1) ::
+        new TypedColumn[Any, A2](u2) ::
+        new TypedColumn[Any, A3](u3) ::
+        new TypedColumn[Any, A4](u4) ::
+        new TypedColumn[Any, A5](u5) ::
+        Nil
+    new Column(
+      FramelessUdf(f, inputs, TypedEncoder[RT])
+    )
   }
 
   def udf[
@@ -97,19 +95,18 @@ trait Udfs {
       A6: TypedEncoder
   ](
       f: (A1, A2, A3, A4, A5, A6) => RT
-  ): (Column, Column, Column, Column, Column, Column) => Column = {
-    (u1, u2, u3, u4, u5, u6) =>
-      val inputs =
-        new TypedColumn[Any, A1](u1) ::
-          new TypedColumn[Any, A2](u2) ::
-          new TypedColumn[Any, A3](u3) ::
-          new TypedColumn[Any, A4](u4) ::
-          new TypedColumn[Any, A5](u5) ::
-          new TypedColumn[Any, A6](u6) ::
-          Nil
-      new Column(
-        FramelessUdf(f, inputs, TypedEncoder[RT])
-      )
+  ): (Column, Column, Column, Column, Column, Column) => Column = { (u1, u2, u3, u4, u5, u6) =>
+    val inputs =
+      new TypedColumn[Any, A1](u1) ::
+        new TypedColumn[Any, A2](u2) ::
+        new TypedColumn[Any, A3](u3) ::
+        new TypedColumn[Any, A4](u4) ::
+        new TypedColumn[Any, A5](u5) ::
+        new TypedColumn[Any, A6](u6) ::
+        Nil
+    new Column(
+      FramelessUdf(f, inputs, TypedEncoder[RT])
+    )
   }
 
   def udf[
@@ -152,7 +149,14 @@ trait Udfs {
   ](
       f: (A1, A2, A3, A4, A5, A6, A7, A8) => RT
   ): (
-      Column, Column, Column, Column, Column, Column, Column, Column
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column
   ) => Column = { (u1, u2, u3, u4, u5, u6, u7, u8) =>
     val inputs =
       new TypedColumn[Any, A1](u1) ::
@@ -183,7 +187,15 @@ trait Udfs {
   ](
       f: (A1, A2, A3, A4, A5, A6, A7, A8, A9) => RT
   ): (
-      Column, Column, Column, Column, Column, Column, Column, Column, Column
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column
   ) => Column = { (u1, u2, u3, u4, u5, u6, u7, u8, u9) =>
     val inputs =
       new TypedColumn[Any, A1](u1) ::
@@ -216,7 +228,15 @@ trait Udfs {
   ](
       f: (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10) => RT
   ): (
-      Column, Column, Column, Column, Column, Column, Column, Column, Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
+      Column,
       Column
   ) => Column = { (u1, u2, u3, u4, u5, u6, u7, u8, u9, u10) =>
     val inputs =

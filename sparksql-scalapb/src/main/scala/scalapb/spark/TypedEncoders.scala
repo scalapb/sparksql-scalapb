@@ -4,22 +4,14 @@ import com.google.protobuf.ByteString
 import frameless.{TypedEncoder, TypedExpressionEncoder}
 import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
-import org.apache.spark.sql.catalyst.expressions.{
-  Expression,
-  If,
-  IsNull,
-  Literal
-}
+import org.apache.spark.sql.catalyst.expressions.{Expression, If, IsNull, Literal}
 import org.apache.spark.sql.types._
 import scalapb._
 import scalapb.descriptors.{PValue, Reads}
 
 import scala.reflect.ClassTag
 
-trait TypedEncoders
-    extends FromCatalystHelpers
-    with ToCatalystHelpers
-    with Serializable {
+trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Serializable {
   class MessageTypedEncoder[T <: GeneratedMessage](implicit
       cmp: GeneratedMessageCompanion[T],
       ct: ClassTag[T]
