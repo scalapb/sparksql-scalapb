@@ -3,6 +3,8 @@ syntax = "proto2";
 package scalapb.spark.test;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
@@ -140,4 +142,11 @@ message Level1 {
 
 message AnyTest {
   optional google.protobuf.Any any = 1;
+}
+
+message WellKnownTypes {
+  optional google.protobuf.Timestamp timestamp = 1;
+  optional google.protobuf.Duration  duration = 2;
+  repeated google.protobuf.Timestamp timestamps = 3;
+  repeated google.protobuf.Duration durations = 4;
 }

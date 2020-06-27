@@ -112,6 +112,11 @@ class AllTypesSpec
     verifyTypes[AT3.AnyTest]
   }
 
+  it should "work for time types" in {
+    verifyTypes[AT2.WellKnownTypes]
+    verifyTypes[AT3.WellKnownTypes]
+  }
+
   it should "work for wrapper types" in {
     verifyTypes[AT3.WrappersTest]
     verifyTypes[AT3.WrappersTest](ProtoSQL.withPrimitiveWrappers)
