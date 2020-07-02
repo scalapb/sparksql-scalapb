@@ -29,9 +29,7 @@ case class PersonLike(
     nums: Vector[Int] = Vector.empty
 )
 
-case class Foo(x: Person, y: String)
-
-case class Foo2(x: Int, y: String)
+case class OuterCaseClass(x: Person, y: String)
 
 class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
@@ -314,5 +312,11 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       .write
       .mode("overwrite")
       .save("/tmp/address2")
+  }
+
+  "OuterCaseClass" should "use our type encoders" in {
+    val outer = OuterCaseClass(TestPerson, "foo")
+    val df = spark.createDataset(Seq(outer)).toDF
+    df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
   }
 }
