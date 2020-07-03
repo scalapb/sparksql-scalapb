@@ -119,6 +119,7 @@ class AllTypesSpec
 
   it should "work for wrapper types" in {
     verifyTypes[AT3.WrappersTest]
-    verifyTypes[AT3.WrappersTest](ProtoSQL.withPrimitiveWrappers)
+    verifyTypes[AT3.WrappersTest](ProtoSQL.withRetainedPrimitiveWrappers)
+    verifyTypes[AT3.WrappersTest](new ProtoSQL(SchemaOptions().withScalaNames))
   }
 }

@@ -49,8 +49,8 @@ import scalapb.descriptors.{
 import scalapb.descriptors.Descriptor
 import com.google.protobuf.wrappers.Int32Value
 
-trait ProtoSQL {
-  self: WrapperTypes =>
+class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
+  self =>
   import scala.language.existentials
 
   def protoToDataFrame[T <: GeneratedMessage: Encoder](
@@ -73,10 +73,9 @@ trait ProtoSQL {
   ): DataType = schemaFor(cmp.scalaDescriptor)
 
   def schemaFor(descriptor: Descriptor): DataType =
-    types.get(descriptor) match {
-      case Some(dt) => dt
-      case _        => StructType(descriptor.fields.map(structFieldFor))
-    }
+    schemaOptions
+      .customDataTypeFor(descriptor)
+      .getOrElse(StructType(descriptor.fields.map(structFieldFor)))
 
   def toRowData(fd: FieldDescriptor, pvalue: PValue): Any =
     pvalue match {
@@ -105,7 +104,7 @@ trait ProtoSQL {
   }
 
   def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any =
-    if (types.contains(descriptor))
+    if (schemaOptions.isUnpackedPrimitiveWrapper(descriptor))
       (for {
         fd <- descriptor.findFieldByName("value")
         value <- msg.value.get(fd)
@@ -145,7 +144,7 @@ trait ProtoSQL {
 
   def structFieldFor(fd: FieldDescriptor): StructField = {
     StructField(
-      fd.name,
+      schemaOptions.columnNaming.fieldName(fd),
       dataTypeFor(fd),
       nullable = !fd.isRequired && !fd.isRepeated
     )
@@ -173,6 +172,10 @@ trait ProtoSQL {
   }
 }
 
-object ProtoSQL extends ProtoSQL with Udfs with NoWrapperTypes {
-  val withPrimitiveWrappers = new ProtoSQL with Udfs with AllWrapperTypes
+object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
+  @deprecated("Primitive wrappers are unpacked by default. Use ProtoSQL directly", "0.11.0")
+  lazy val withPrimitiveWrappers: ProtoSQL = new ProtoSQL(SchemaOptions.Default)
+
+  object withRetainedPrimitiveWrappers
+      extends ProtoSQL(SchemaOptions.Default.withRetainedPrimitiveWrappers)
 }

@@ -22,20 +22,22 @@ import scalapb.GeneratedMessageCompanion
 import scalapb.descriptors._
 
 trait FromCatalystHelpers {
-  def protoSql: ProtoSQL with WrapperTypes
+  def protoSql: ProtoSQL
+
+  def schemaOptions: SchemaOptions = protoSql.schemaOptions
 
   def pmessageFromCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
     val args =
-      if (protoSql.types.contains(cmp.scalaDescriptor))
+      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor))
         cmp.scalaDescriptor.fields.map { fd =>
           fieldFromCatalyst(cmp, fd, input)
         }
       else
         cmp.scalaDescriptor.fields.map { fd =>
-          val newPath = addToPath(input, fd.name)
+          val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
           fieldFromCatalyst(cmp, fd, newPath)
         }
     StaticInvoke(
