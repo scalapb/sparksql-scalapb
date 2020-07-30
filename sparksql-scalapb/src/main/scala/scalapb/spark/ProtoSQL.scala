@@ -48,6 +48,8 @@ import scalapb.descriptors.{
 }
 import scalapb.descriptors.Descriptor
 import com.google.protobuf.wrappers.Int32Value
+import org.apache.spark.sql.types.MapType
+import org.apache.spark.sql.catalyst.util.ArrayBasedMapData
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   self =>
@@ -91,7 +93,16 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
           fd.scalaType.asInstanceOf[ScalaType.Message].descriptor,
           value
         )
-      case PRepeated(value) =>
+      case PRepeated(keyValues) if fd.isMapField =>
+        val mapEntry = fd.scalaType.asInstanceOf[ScalaType.Message]
+        val keyDesc = mapEntry.descriptor.findFieldByNumber(1).get
+        val valDesc = mapEntry.descriptor.findFieldByNumber(2).get
+        val keys =
+          keyValues.map(t => toRowData(keyDesc, t.asInstanceOf[PMessage].value(keyDesc))).toArray
+        val vals =
+          keyValues.map(t => toRowData(valDesc, t.asInstanceOf[PMessage].value(valDesc))).toArray
+        ArrayBasedMapData(keys, vals)
+      case PRepeated(value) if !fd.isMapField =>
         new GenericArrayData(value.map(toRowData(fd, _)))
       case penum: PEnum => JavaHelpers.penumToString(penum)
       case PEmpty       => null
@@ -139,7 +150,18 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
     }
 
   def dataTypeFor(fd: FieldDescriptor): DataType =
-    if (fd.isRepeated) ArrayType(singularDataType(fd), containsNull = false)
+    if (fd.isMapField) fd.scalaType match {
+      case ScalaType.Message(mapEntry) =>
+        MapType(
+          singularDataType(mapEntry.findFieldByNumber(1).get),
+          singularDataType(mapEntry.findFieldByNumber(2).get)
+        )
+      case _ =>
+        throw new RuntimeException(
+          "Unexpected: field marked as map, but does not have an entry message associated"
+        )
+    }
+    else if (fd.isRepeated) ArrayType(singularDataType(fd), containsNull = false)
     else singularDataType(fd)
 
   def structFieldFor(fd: FieldDescriptor): StructField = {
@@ -176,6 +198,7 @@ object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
   @deprecated("Primitive wrappers are unpacked by default. Use ProtoSQL directly", "0.11.0")
   lazy val withPrimitiveWrappers: ProtoSQL = new ProtoSQL(SchemaOptions.Default)
 
-  object withRetainedPrimitiveWrappers
-      extends ProtoSQL(SchemaOptions.Default.withRetainedPrimitiveWrappers)
+  val withRetainedPrimitiveWrappers: ProtoSQL = new ProtoSQL(
+    SchemaOptions.Default.withRetainedPrimitiveWrappers
+  )
 }

@@ -40,6 +40,8 @@ object ArbitraryProtoUtils {
 
   implicit val topLevelEnum2 = arbitraryEnum[AT2.TopLevelEnum]
 
+  implicit val topLevelEnum0 = arbitraryEnum[AT2.TopLevelEnum0]
+
   implicit val topLevelEnum3 = arbitraryEnum[AT3.TopLevelEnum]
 
   implicit def arbitraryMessage[A <: GeneratedMessage](implicit

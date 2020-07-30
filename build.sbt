@@ -29,7 +29,8 @@ lazy val sparkSqlScalaPB = project
     ),
     PB.targets in Test := Seq(
       scalapb.gen(grpc = false) -> (sourceManaged in Test).value
-    )
+    ),
+    Test / run / fork := true
   )
 
 publishTo in ThisBuild := sonatypePublishToBundle.value

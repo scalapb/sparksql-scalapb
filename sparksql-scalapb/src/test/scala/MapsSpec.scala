@@ -22,7 +22,6 @@ class MapsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   "converting maps to df" should "work" in {
     val df = ProtoSQL.createDataFrame(spark, data)
-
     val res = df.as[MapTest].map(r => r)
 
     res.show()
