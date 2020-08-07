@@ -15,7 +15,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 
-class WrappersSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
+class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
     .builder()
     .appName("ScalaPB Demo")
@@ -39,9 +39,9 @@ class WrappersSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   )
 
-  "converting df with primitive wrappers" should "work with primitive implicits" in {
-    import ProtoSQL.withPrimitiveWrappers.implicits._
-    val df = ProtoSQL.withPrimitiveWrappers.createDataFrame(spark, data)
+  "converting df with primitive wrappers" should "unpack primitive wrappers by default" in {
+    import ProtoSQL.implicits._
+    val df = ProtoSQL.createDataFrame(spark, data)
     df.schema.fields.map(_.dataType).toSeq must be(
       Seq(
         IntegerType,
@@ -58,9 +58,9 @@ class WrappersSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   }
 
-  "converting df with primitive wrappers" should "work with default implicits" in {
-    import ProtoSQL.implicits._
-    val df = ProtoSQL.createDataFrame(spark, data)
+  "converting df with primitive wrappers" should "retain value field when option is set" in {
+    import ProtoSQL.withRetainedPrimitiveWrappers.implicits._
+    val df = ProtoSQL.withRetainedPrimitiveWrappers.createDataFrame(spark, data)
     df.schema.fields.map(_.dataType).toSeq must be(
       Seq(
         StructType(Seq(StructField("value", IntegerType, true))),
@@ -91,5 +91,18 @@ class WrappersSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
         )
       )
     )
+  }
+
+  "schema" should "use scalaNames when option is set" in {
+    val scalaNameProtoSQL = new ProtoSQL(SchemaOptions.Default.withScalaNames)
+    import scalaNameProtoSQL.implicits._
+    val df = scalaNameProtoSQL.createDataFrame(spark, data)
+    df.schema.fieldNames.toVector must contain theSameElementsAs (Seq(
+      "intValue",
+      "stringValue",
+      "ints",
+      "strings"
+    ))
+    df.collect()
   }
 }

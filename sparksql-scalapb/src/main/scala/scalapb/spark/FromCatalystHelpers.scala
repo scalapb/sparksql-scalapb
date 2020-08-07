@@ -1,10 +1,7 @@
 package scalapb.spark
 
 import com.google.protobuf.ByteString
-import org.apache.spark.sql.catalyst.analysis.{
-  UnresolvedAttribute,
-  UnresolvedExtractValue
-}
+import org.apache.spark.sql.catalyst.analysis.{UnresolvedAttribute, UnresolvedExtractValue}
 import org.apache.spark.sql.catalyst.expressions
 import org.apache.spark.sql.catalyst.expressions.objects.{
   Invoke,
@@ -23,22 +20,27 @@ import org.apache.spark.sql.catalyst.expressions.{
 import org.apache.spark.sql.types.ObjectType
 import scalapb.GeneratedMessageCompanion
 import scalapb.descriptors._
+import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
+import org.apache.spark.sql.types.MapType
+import org.apache.spark.sql.catalyst.expressions.objects.LambdaVariable
 
 trait FromCatalystHelpers {
-  def protoSql: ProtoSQL with WrapperTypes
+  def protoSql: ProtoSQL
+
+  def schemaOptions: SchemaOptions = protoSql.schemaOptions
 
   def pmessageFromCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
     val args =
-      if (protoSql.types.contains(cmp.scalaDescriptor))
+      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor))
         cmp.scalaDescriptor.fields.map { fd =>
           fieldFromCatalyst(cmp, fd, input)
         }
       else
         cmp.scalaDescriptor.fields.map { fd =>
-          val newPath = addToPath(input, fd.name)
+          val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
           fieldFromCatalyst(cmp, fd, newPath)
         }
     StaticInvoke(
@@ -54,7 +56,7 @@ trait FromCatalystHelpers {
       fd: FieldDescriptor,
       input: Expression
   ): Expression = {
-    if (fd.isRepeated) {
+    if (fd.isRepeated && !fd.isMapField) {
       val objs = MapObjects(
         (input: Expression) => singleFieldValueFromCatalyst(cmp, fd, input),
         input,
@@ -65,6 +67,24 @@ trait FromCatalystHelpers {
         ObjectType(classOf[PValue]),
         "mkPRepeated",
         objs :: Nil
+      )
+    } else if (fd.isRepeated && fd.isMapField) {
+      val mapEntryCmp = cmp.messageCompanionForFieldNumber(fd.number)
+      val keyDesc = mapEntryCmp.scalaDescriptor.findFieldByNumber(1).get
+      val valDesc = mapEntryCmp.scalaDescriptor.findFieldByNumber(2).get
+      val objs = MyCatalystToExternalMap(
+        (in: Expression) => singleFieldValueFromCatalyst(mapEntryCmp, keyDesc, in),
+        (in: Expression) => singleFieldValueFromCatalyst(mapEntryCmp, valDesc, in),
+        input,
+        ProtoSQL.dataTypeFor(fd).asInstanceOf[MapType],
+        classOf[Vector[(Any, Any)]]
+      )
+      StaticInvoke(
+        JavaHelpers.getClass,
+        ObjectType(classOf[PValue]),
+        "mkPRepeatedMap",
+        Literal.fromObject(mapEntryCmp) ::
+          objs :: Nil
       )
     } else if (fd.isOptional)
       If(
@@ -138,5 +158,46 @@ trait FromCatalystHelpers {
         UnresolvedExtractValue(path, expressions.Literal(name))
     }
     res
+  }
+}
+
+object MyCatalystToExternalMap {
+  private val curId = new java.util.concurrent.atomic.AtomicInteger()
+
+  /**
+    * Construct an instance of CatalystToExternalMap case class.
+    *
+    * @param keyFunction The function applied on the key collection elements.
+    * @param valueFunction The function applied on the value collection elements.
+    * @param inputData An expression that when evaluated returns a map object.
+    * @param mapType,
+    * @param collClass The type of the resulting collection.
+    */
+  def apply(
+      keyFunction: Expression => Expression,
+      valueFunction: Expression => Expression,
+      inputData: Expression,
+      mapType: MapType,
+      collClass: Class[_]
+  ): CatalystToExternalMap = {
+    val id = curId.getAndIncrement()
+    val keyLoopValue = s"CatalystToExternalMap_keyLoopValue$id"
+    val keyLoopVar = LambdaVariable(keyLoopValue, "", mapType.keyType, nullable = false)
+    val valueLoopValue = s"CatalystToExternalMap_valueLoopValue$id"
+    val valueLoopIsNull = if (mapType.valueContainsNull) {
+      s"CatalystToExternalMap_valueLoopIsNull$id"
+    } else {
+      "false"
+    }
+    val valueLoopVar = LambdaVariable(valueLoopValue, valueLoopIsNull, mapType.valueType)
+    CatalystToExternalMap(
+      keyLoopValue,
+      keyFunction(keyLoopVar),
+      valueLoopValue,
+      valueLoopIsNull,
+      valueFunction(valueLoopVar),
+      inputData,
+      collClass
+    )
   }
 }

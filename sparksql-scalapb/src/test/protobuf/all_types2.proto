@@ -3,6 +3,8 @@ syntax = "proto2";
 package scalapb.spark.test;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
@@ -85,6 +87,13 @@ enum TopLevelEnum {
   FOREIGN_BAZ = 6;
 }
 
+enum TopLevelEnum0 {
+  DEFAULT = 0;
+  TOP_FOO = 4;
+  TOP_BAR = 5;
+  TOP_BAZ = 6;
+}
+
 message EnumTest {
   enum NestedEnum {
     FOO = 1;
@@ -140,4 +149,24 @@ message Level1 {
 
 message AnyTest {
   optional google.protobuf.Any any = 1;
+}
+
+message WellKnownTypes {
+  optional google.protobuf.Timestamp timestamp = 1;
+  optional google.protobuf.Duration  duration = 2;
+  repeated google.protobuf.Timestamp timestamps = 3;
+  repeated google.protobuf.Duration durations = 4;
+}
+
+message MapTypes {
+  map<int32, bool> int32_to_bool = 1;
+  map<int32, bytes> int32_to_bytes = 2;
+  map<int32, double> int32_to_double = 3;
+  map<int32, float> int32_to_float = 4;
+  map<int32, int32> int32_to_int32 = 5;
+  map<int32, int64> int32_to_int64 = 6;
+  map<int32, string> int32_to_string = 7;
+  map<string, int32> string_to_int32 = 8;
+  map<int32, TopLevelMessage> int32_to_message = 9;
+  map<int32, TopLevelEnum0> int32_to_enum = 10;
 }

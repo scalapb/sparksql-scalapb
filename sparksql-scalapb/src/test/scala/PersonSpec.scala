@@ -2,14 +2,7 @@ package scalapb.spark
 
 import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
-import com.example.protos.demo.{
-  Address,
-  Event,
-  Hit,
-  Gender,
-  Person,
-  SimplePerson
-}
+import com.example.protos.demo.{Address, Event, Hit, Gender, Person, SimplePerson}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
 import org.scalatest.events.TestPending
@@ -36,9 +29,7 @@ case class PersonLike(
     nums: Vector[Int] = Vector.empty
 )
 
-case class Foo(x: Person, y: String)
-
-case class Foo2(x: Int, y: String)
+case class OuterCaseClass(x: Person, y: String)
 
 class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
@@ -187,9 +178,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
         _.gender := Gender.MALE,
         _.inner.innerValue := InnerEnum.V1,
         _.data := ByteString.copyFrom(Array[Byte](1, 2, 3)),
-        _.addresses := pl.addresses.map(a =>
-          Address(city = a.city, street = a.street)
-        )
+        _.addresses := pl.addresses.map(a => Address(city = a.city, street = a.street))
       )
     )
     spark.createDataset(Seq(Person(gender = Some(Gender.FEMALE)))).toDF().show()
@@ -323,5 +312,11 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       .write
       .mode("overwrite")
       .save("/tmp/address2")
+  }
+
+  "OuterCaseClass" should "use our type encoders" in {
+    val outer = OuterCaseClass(TestPerson, "foo")
+    val df = spark.createDataset(Seq(outer)).toDF
+    df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
   }
 }

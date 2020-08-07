@@ -1,10 +1,6 @@
 package scalapb.spark
 
-import org.apache.spark.sql.catalyst.expressions.objects.{
-  Invoke,
-  MapObjects,
-  StaticInvoke
-}
+import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, StaticInvoke}
 import org.apache.spark.sql.catalyst.expressions.{
   CreateNamedStruct,
   Expression,
@@ -15,20 +11,25 @@ import org.apache.spark.sql.catalyst.expressions.{
 import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
+import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
+import org.apache.spark.sql.catalyst.expressions.objects.ExternalMapToCatalyst
+import scalapb.GeneratedMessage
 
 trait ToCatalystHelpers {
-  def protoSql: ProtoSQL with WrapperTypes
+  def protoSql: ProtoSQL
+
+  def schemaOptions: SchemaOptions
 
   def messageToCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression =
-    if (protoSql.types.contains(cmp.scalaDescriptor)) {
+    if (protoSql.schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
       val fd = cmp.scalaDescriptor.fields(0)
       fieldToCatalyst(cmp, fd, input)
     } else {
       val nameExprs = cmp.scalaDescriptor.fields.map { field =>
-        Literal(field.name)
+        Literal(schemaOptions.columnNaming.fieldName(field))
       }
 
       val valueExprs = cmp.scalaDescriptor.fields.map { field =>
@@ -45,12 +46,15 @@ trait ToCatalystHelpers {
       If(IsNull(input), nullExpr, createExpr)
     }
 
-  def fieldToCatalyst(
+  def fieldGetterAndTransformer(
       cmp: GeneratedMessageCompanion[_],
-      fd: FieldDescriptor,
-      inputObject: Expression
-  ): Expression = {
-    def getField =
+      fd: FieldDescriptor
+  ): (Expression => Expression, Expression => Expression) = {
+    def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
+
+    val isMessage = fd.scalaType.isInstanceOf[ScalaType.Message]
+
+    def getField(inputObject: Expression): Expression =
       Invoke(
         inputObject,
         "getField",
@@ -72,9 +76,7 @@ trait ToCatalystHelpers {
         ) :: Nil
       )
 
-    def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
-
-    def getFieldByNumber =
+    def getFieldByNumber(inputObject: Expression): Expression =
       Invoke(
         inputObject,
         "getFieldByNumber",
@@ -85,25 +87,61 @@ trait ToCatalystHelpers {
         Literal(fd.number, IntegerType) :: Nil
       )
 
+    if (!isMessage) {
+      (getField, { e: Expression => singularFieldToCatalyst(fd, e) })
+    } else {
+      (
+        getFieldByNumber,
+        { e: Expression =>
+          messageToCatalyst(messageFieldCompanion, e)
+        }
+      )
+    }
+  }
+
+  def fieldToCatalyst(
+      cmp: GeneratedMessageCompanion[_],
+      fd: FieldDescriptor,
+      inputObject: Expression
+  ): Expression = {
+
     val isMessage = fd.scalaType.isInstanceOf[ScalaType.Message]
 
-    val (fieldGetter, transform): (Expression, Expression => Expression) =
-      if (!isMessage) {
-        (getField, { e: Expression => singularFieldToCatalyst(fd, e) })
-      } else {
-        (
-          getFieldByNumber,
-          { e: Expression =>
-            messageToCatalyst(messageFieldCompanion, e)
-          }
-        )
-      }
+    val (fieldGetter, transform) = fieldGetterAndTransformer(cmp, fd)
+
+    def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
 
     if (fd.isRepeated) {
-      if (isMessage)
+      if (fd.isMapField) {
+        val keyDesc =
+          fd.scalaType.asInstanceOf[ScalaType.Message].descriptor.findFieldByNumber(1).get
+        val valueDesc =
+          fd.scalaType.asInstanceOf[ScalaType.Message].descriptor.findFieldByNumber(2).get
+        val (_, valueTransform) =
+          fieldGetterAndTransformer(cmp.messageCompanionForFieldNumber(fd.number), valueDesc)
+        val valueType = valueDesc.scalaType match {
+          case ScalaType.Message(_) => ObjectType(classOf[GeneratedMessage])
+          case _                    => ObjectType(classOf[PValue])
+        }
+
+        ExternalMapToCatalyst(
+          StaticInvoke(
+            JavaHelpers.getClass,
+            ObjectType(classOf[Map[_, _]]),
+            "mkMap",
+            fieldGetter(inputObject) :: Nil
+          ),
+          ObjectType(classOf[PValue]),
+          singularFieldToCatalyst(keyDesc, _),
+          false,
+          valueType,
+          valueTransform,
+          true
+        )
+      } else if (isMessage)
         MapObjects(
           transform,
-          fieldGetter,
+          fieldGetter(inputObject),
           ObjectType(messageFieldCompanion.defaultInstance.getClass)
         )
       else {
@@ -111,22 +149,22 @@ trait ToCatalystHelpers {
           JavaHelpers.getClass,
           ObjectType(classOf[Vector[_]]),
           "vectorFromPValue",
-          fieldGetter :: Nil
+          fieldGetter(inputObject) :: Nil
         )
         MapObjects(transform, getter, ObjectType(classOf[PValue]))
       }
     } else {
-      if (isMessage) transform(fieldGetter)
+      if (isMessage) transform(fieldGetter(inputObject))
       else
         If(
           StaticInvoke(
             JavaHelpers.getClass,
             BooleanType,
             "isEmpty",
-            getField :: Nil
+            fieldGetter(inputObject) :: Nil
           ),
           Literal.create(null, protoSql.dataTypeFor(fd)),
-          transform(fieldGetter)
+          transform(fieldGetter(inputObject))
         )
     }
   }
