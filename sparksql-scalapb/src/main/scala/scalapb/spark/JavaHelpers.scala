@@ -79,17 +79,12 @@ object JavaHelpers {
     }
   }
 
-  def asPValue(h: Object): PValue = h.asInstanceOf[PValue]
-
-  def mkPMessage(cmp: GeneratedMessageCompanion[_], args: ArrayData): PValue = {
-    // returning Any to ensure the any-value doesn't get unwrapped in runtime.
-    PMessage(
-      cmp.scalaDescriptor.fields
-        .zip(args.array)
-        .filterNot(_._2 == PEmpty)
-        .toMap
-        .asInstanceOf[Map[FieldDescriptor, PValue]]
-    )
+  def mkMap(cmp: GeneratedMessageCompanion[_], args: ArrayData): Map[FieldDescriptor, PValue] = {
+    cmp.scalaDescriptor.fields
+      .zip(args.array)
+      .filterNot(_._2 == PEmpty)
+      .toMap
+      .asInstanceOf[Map[FieldDescriptor, PValue]]
   }
 
   def mkPRepeated(args: ArrayData): PValue = {

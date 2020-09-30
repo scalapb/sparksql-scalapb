@@ -50,6 +50,7 @@ import scalapb.descriptors.Descriptor
 import com.google.protobuf.wrappers.Int32Value
 import org.apache.spark.sql.types.MapType
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData
+import org.apache.spark.sql.types.Metadata
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   self =>

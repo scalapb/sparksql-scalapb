@@ -29,8 +29,7 @@ class AllTypesSpec
   def verifyTypes[
       T <: GeneratedMessage: Arbitrary: GeneratedMessageCompanion: ClassTag
   ](
-      protoSQL: ProtoSQL,
-      skipCoalesce: Boolean = false
+      protoSQL: ProtoSQL
   ): Unit =
     forAll { (n: Seq[T]) =>
       import protoSQL.implicits._
@@ -44,15 +43,12 @@ class AllTypesSpec
       // Creates dataframe using encoder serialization:
       val ds2 = spark.createDataset(n)
       ds2.collect() must contain theSameElementsAs (n)
-      if (!skipCoalesce) {
-        ds2.toDF.coalesce(1).except(df1.coalesce(1)).count() must be(0)
-      }
     }
 
   def verifyTypes[
       T <: GeneratedMessage: Arbitrary: GeneratedMessageCompanion: ClassTag
   ]: Unit =
-    verifyTypes[T](ProtoSQL, false)
+    verifyTypes[T](ProtoSQL)
 
   "AllTypes" should "work for int32" in {
     verifyTypes[AT2.Int32Test]
@@ -126,7 +122,7 @@ class AllTypesSpec
   }
 
   it should "work for maps" in {
-    verifyTypes[AT2.MapTypes](ProtoSQL, true)
-    verifyTypes[AT3.MapTypes](ProtoSQL, true)
+    verifyTypes[AT2.MapTypes](ProtoSQL)
+    verifyTypes[AT3.MapTypes](ProtoSQL)
   }
 }

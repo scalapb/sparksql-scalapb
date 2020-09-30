@@ -10,6 +10,13 @@ import scalapb._
 import scalapb.descriptors.{PValue, Reads}
 
 import scala.reflect.ClassTag
+import org.apache.spark.sql.catalyst.expressions.CreateNamedStruct
+import org.apache.spark.sql.catalyst.expressions.BoundReference
+import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.sql.catalyst.WalkedTypePath
+import org.apache.spark.sql.catalyst.expressions.objects.NewInstance
+import scalapb.descriptors.PMessage
+import org.apache.spark.sql.catalyst.expressions.CreateArray
 
 trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Serializable {
   class MessageTypedEncoder[T <: GeneratedMessage](implicit
@@ -25,14 +32,6 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Seri
     def fromCatalyst(path: Expression): Expression = {
       val expr = pmessageFromCatalyst(cmp, path)
 
-      val pmsg =
-        StaticInvoke(
-          JavaHelpers.getClass,
-          ObjectType(classOf[PValue]),
-          "asPValue",
-          expr :: Nil
-        )
-
       val reads = Invoke(
         Literal.fromObject(cmp),
         "messageReads",
@@ -42,9 +41,7 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Seri
 
       val read = Invoke(reads, "read", ObjectType(classOf[Function[_, _]]))
 
-      val out = Invoke(read, "apply", ObjectType(ct.runtimeClass), pmsg :: Nil)
-
-      If(IsNull(path), Literal.create(null, out.dataType), out)
+      Invoke(read, "apply", ObjectType(ct.runtimeClass), expr :: Nil)
     }
 
     override def toCatalyst(path: Expression): Expression = {
