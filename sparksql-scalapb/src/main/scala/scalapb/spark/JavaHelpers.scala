@@ -97,8 +97,8 @@ object JavaHelpers {
   ): PValue = {
     val keyDesc = mapEntryCmp.scalaDescriptor.findFieldByNumber(1).get
     val valDesc = mapEntryCmp.scalaDescriptor.findFieldByNumber(2).get
-    PRepeated(args.map {
-      case (k, v) => PMessage(Map(keyDesc -> k, valDesc -> v))
+    PRepeated(args.map { case (k, v) =>
+      PMessage(Map(keyDesc -> k, valDesc -> v))
     })
   }
 

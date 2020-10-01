@@ -37,8 +37,8 @@ trait ToCatalystHelpers {
       }
 
       // the way exprs are encoded in CreateNamedStruct
-      val exprs = nameExprs.zip(valueExprs).flatMap {
-        case (nameExpr, valueExpr) => nameExpr :: valueExpr :: Nil
+      val exprs = nameExprs.zip(valueExprs).flatMap { case (nameExpr, valueExpr) =>
+        nameExpr :: valueExpr :: Nil
       }
 
       val createExpr = CreateNamedStruct(exprs)
