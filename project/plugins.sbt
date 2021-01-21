@@ -8,4 +8,4 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.5")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.2")
 
-libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.10.9"
+libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.10.10"
