@@ -27,13 +27,13 @@ lazy val sparkSqlScalaPB = project
     inConfig(Test)(
       sbtprotoc.ProtocPlugin.protobufConfigSettings
     ),
-    PB.targets in Test := Seq(
-      scalapb.gen(grpc = false) -> (sourceManaged in Test).value
+    Test / PB.targets := Seq(
+      scalapb.gen(grpc = false) -> (Test / sourceManaged).value
     ),
     Test / run / fork := true
   )
 
-publishTo in ThisBuild := sonatypePublishToBundle.value
+ThisBuild / publishTo := sonatypePublishToBundle.value
 
 releaseCrossBuild := true
 
