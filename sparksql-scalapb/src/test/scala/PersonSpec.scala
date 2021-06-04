@@ -2,13 +2,15 @@ package scalapb.spark
 
 import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
-import com.example.protos.demo.{Address, Event, Hit, Gender, Person, SimplePerson}
+import com.example.protos.demo.{Address, Event, Gender, Hit, Person, SimplePerson}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
 import org.scalatest.events.TestPending
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
+
+import java.sql.Timestamp
 
 case class InnerLike(inner_value: String)
 
@@ -30,6 +32,7 @@ case class PersonLike(
 )
 
 case class OuterCaseClass(x: Person, y: String)
+case class OuterCaseClassTimestamp(x: Person, y: Timestamp)
 
 class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
@@ -318,5 +321,14 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     val outer = OuterCaseClass(TestPerson, "foo")
     val df = spark.createDataset(Seq(outer)).toDF
     df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
+  }
+
+  "OuterCaseClassTimestamp" should "serialize a java.sql.Timestamp" in {
+    val ts = Timestamp.valueOf("2020-01-01 00:00:00")
+    val outer = OuterCaseClassTimestamp(TestPerson, ts)
+    val df = spark.createDataset(Seq(outer)).toDF
+
+    df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
+    df.select($"y").as[Timestamp].collect() must contain theSameElementsAs Seq(ts)
   }
 }
