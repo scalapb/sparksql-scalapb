@@ -324,6 +324,11 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   }
 
   "OuterCaseClassTimestamp" should "serialize a java.sql.Timestamp" in {
+    implicit val timestampInjection = new frameless.Injection[Timestamp, Long] {
+      def apply(ts: Timestamp): Long = ts.getTime()
+      def invert(l: Long): Timestamp = new Timestamp(l)
+    }
+
     val ts = Timestamp.valueOf("2020-01-01 00:00:00")
     val outer = OuterCaseClassTimestamp(TestPerson, ts)
     val df = spark.createDataset(Seq(outer)).toDF
