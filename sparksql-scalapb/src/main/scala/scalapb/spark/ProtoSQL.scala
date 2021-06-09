@@ -109,6 +109,14 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
       case PEmpty       => null
     }
 
+  def messageToRowWithSchema[T <: GeneratedMessage](
+    msg: T
+  )(implicit cmp: GeneratedMessageCompanion[T]): Row = {
+    RowEncoder.apply(schemaFor[T].asInstanceOf[StructType])
+      .createDeserializer()
+      .apply(messageToRow[T])
+  }
+
   def messageToRow[T <: GeneratedMessage](
       msg: T
   )(implicit cmp: GeneratedMessageCompanion[T]): InternalRow = {
