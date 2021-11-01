@@ -7,7 +7,7 @@ ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
 
 ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
-val Scala212 = "2.13.6"
+val Scala212 = "2.13.7"
 
 lazy val sparkSqlScalaPB = project
   .in(file("sparksql-scalapb"))
