@@ -106,18 +106,4 @@ class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll
     ))
     df.collect()
   }
-
-  "parsing null repeated from json" should "work" in {
-    val protoSql = ProtoSQL.withNullRepeatedSupport
-    import protoSql.implicits._
-    spark.read.schema(protoSql.schemaFor[Person].asInstanceOf[StructType])
-      .json("./sparksql-scalapb/src/test/assets/person_null_repeated.json")
-      .as[Person]
-      .collect() must contain theSameElementsAs Seq(
-      Person().withTags(Seq("foo", "bar")),
-      Person(),
-      Person(),
-      Person()
-    )
-  }
 }

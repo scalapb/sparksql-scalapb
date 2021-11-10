@@ -202,8 +202,4 @@ object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
   val withRetainedPrimitiveWrappers: ProtoSQL = new ProtoSQL(
     SchemaOptions.Default.withRetainedPrimitiveWrappers
   )
-
-  val withNullRepeatedSupport: ProtoSQL = new ProtoSQL(
-    SchemaOptions.Default.copy(supportNullRepeated = true)
-  )
 }

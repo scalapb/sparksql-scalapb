@@ -18,8 +18,7 @@ import org.apache.spark.sql.types.BinaryType
 
 case class SchemaOptions(
     columnNaming: ColumnNaming,
-    retainPrimitiveWrappers: Boolean,
-    supportNullRepeated: Boolean
+    retainPrimitiveWrappers: Boolean
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -36,7 +35,7 @@ case class SchemaOptions(
 }
 
 object SchemaOptions {
-  val Default = SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, supportNullRepeated = false)
+  val Default = SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false)
 
   def apply(): SchemaOptions = Default
 
