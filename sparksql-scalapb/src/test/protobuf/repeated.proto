@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-option java_package = "com.example.protos";
-
-message NullRepeated {
-    repeated string values = 1;
-}

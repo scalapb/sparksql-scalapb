@@ -345,9 +345,14 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   "parsing from json" should "work" in {
     spark.read.schema(ProtoSQL.schemaFor[Person].asInstanceOf[types.StructType])
-      .json("./sparksql-scalapb/src/test/assets/person.json")
+      .json("./sparksql-scalapb/src/test/assets/person_null_repeated.json")
       .as[Person]
-      .collect() must contain theSameElementsAs(Seq())
+      .collect() must contain theSameElementsAs Seq(
+        Person().withTags(Seq("foo", "bar")),
+        Person(),
+        Person(),
+        Person()
+    )
   }
 
 }
