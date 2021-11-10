@@ -15,7 +15,7 @@ lazy val sparkSqlScalaPB = project
     name := "sparksql-scalapb",
     crossScalaVersions := Seq(Scala212),
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "frameless-dataset" % "0.10.1",
+      "org.typelevel" %% "frameless-dataset" % "0.11.1",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % "3.1.1" % "provided",
