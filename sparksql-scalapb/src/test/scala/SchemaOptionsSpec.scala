@@ -1,7 +1,6 @@
 package scalapb.spark
 
 import com.example.protos.wrappers._
-import com.example.protos.demo.Person
 import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.io.ArrayPrimitiveWritable
 import scalapb.GeneratedMessageCompanion
