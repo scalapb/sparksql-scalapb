@@ -54,7 +54,7 @@ trait FromCatalystHelpers {
         JavaHelpers.getClass,
         ObjectType(classOf[Map[FieldDescriptor, PValue]]),
         "mkMap",
-        Literal.fromObject(cmp) :: CreateArray(args) :: Nil
+        Literal.fromObject(cmp) :: CreateArray(args) :: Literal.fromObject(schemaOptions.supportNullRepeated) :: Nil
       )
     If(
       IsNull(input),

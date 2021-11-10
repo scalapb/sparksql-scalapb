@@ -342,17 +342,4 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
     df.select($"y").as[Timestamp].collect() must contain theSameElementsAs Seq(ts)
   }
-
-  "parsing from json" should "work" in {
-    spark.read.schema(ProtoSQL.schemaFor[Person].asInstanceOf[types.StructType])
-      .json("./sparksql-scalapb/src/test/assets/person_null_repeated.json")
-      .as[Person]
-      .collect() must contain theSameElementsAs Seq(
-        Person().withTags(Seq("foo", "bar")),
-        Person(),
-        Person(),
-        Person()
-    )
-  }
-
 }

@@ -79,11 +79,12 @@ object JavaHelpers {
     }
   }
 
-  def mkMap(cmp: GeneratedMessageCompanion[_], args: ArrayData): Map[FieldDescriptor, PValue] = {
+  def mkMap(cmp: GeneratedMessageCompanion[_], args: ArrayData, supportNullRepeated: Boolean): Map[FieldDescriptor, PValue] = {
     cmp.scalaDescriptor.fields
       .zip(args.array)
       .filter {
-        case (_, null) | (_, PEmpty) => false
+        case (_, null) if supportNullRepeated => false
+        case (_, PEmpty) => false
         case _ => true
       }
       .toMap
