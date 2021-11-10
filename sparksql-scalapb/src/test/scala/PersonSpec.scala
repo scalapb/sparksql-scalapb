@@ -4,7 +4,7 @@ import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
 import com.example.protos.demo.{Address, Event, Hit, Gender, Person, SimplePerson}
 import com.google.protobuf.ByteString
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, functions => F}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, types, functions => F}
 import org.scalatest.events.TestPending
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
@@ -318,5 +318,18 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     val outer = OuterCaseClass(TestPerson, "foo")
     val df = spark.createDataset(Seq(outer)).toDF
     df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
+  }
+
+  "parsing from json" should "work" in {
+    val df = spark.read
+      .schema(ProtoSQL.schemaFor[SimplePerson].asInstanceOf[types.StructType])
+      .json("./sparksql-scalapb/src/test/assets/simple_person_null_repeated.json")
+      .as[SimplePerson]
+    df.collect() must contain theSameElementsAs Seq(
+      SimplePerson().addTags("tag1").addNums(42),
+      SimplePerson(),
+      SimplePerson(),
+      SimplePerson()
+    )
   }
 }
