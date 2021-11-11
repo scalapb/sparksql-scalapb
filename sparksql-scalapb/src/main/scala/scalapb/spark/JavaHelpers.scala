@@ -84,7 +84,7 @@ object JavaHelpers {
       .zip(args.array)
       .filter {
         case (_, null) | (_, PEmpty) => false
-        case _ => true
+        case _                       => true
       }
       .toMap
       .asInstanceOf[Map[FieldDescriptor, PValue]]
