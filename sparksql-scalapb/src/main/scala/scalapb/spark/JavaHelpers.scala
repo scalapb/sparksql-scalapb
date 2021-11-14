@@ -82,7 +82,10 @@ object JavaHelpers {
   def mkMap(cmp: GeneratedMessageCompanion[_], args: ArrayData): Map[FieldDescriptor, PValue] = {
     cmp.scalaDescriptor.fields
       .zip(args.array)
-      .filterNot(_._2 == PEmpty)
+      .filter {
+        case (_, null) | (_, PEmpty) => false
+        case _                       => true
+      }
       .toMap
       .asInstanceOf[Map[FieldDescriptor, PValue]]
   }
