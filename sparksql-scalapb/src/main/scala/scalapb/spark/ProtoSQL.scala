@@ -50,7 +50,7 @@ import scalapb.descriptors.Descriptor
 import com.google.protobuf.wrappers.Int32Value
 
 trait ProtoSQL {
-  self: WrapperTypes =>
+  self: WrapperTypes with ColumnNaming =>
   import scala.language.existentials
 
   def protoToDataFrame[T <: GeneratedMessage: Encoder](
@@ -145,7 +145,7 @@ trait ProtoSQL {
 
   def structFieldFor(fd: FieldDescriptor): StructField = {
     StructField(
-      fd.name,
+      fieldName(fd),
       dataTypeFor(fd),
       nullable = !fd.isRequired && !fd.isRepeated
     )
@@ -173,6 +173,7 @@ trait ProtoSQL {
   }
 }
 
-object ProtoSQL extends ProtoSQL with Udfs with NoWrapperTypes {
-  val withPrimitiveWrappers = new ProtoSQL with Udfs with AllWrapperTypes
+object ProtoSQL extends ProtoSQL with Udfs with NoWrapperTypes with ProtoColumnNaming {
+  val withPrimitiveWrappers = new ProtoSQL with Udfs with AllWrapperTypes with ProtoColumnNaming
+  val withScalaColumnNaming = new ProtoSQL with Udfs with NoWrapperTypes with ScalaColumnNaming
 }
