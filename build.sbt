@@ -7,7 +7,7 @@ ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
 
 ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
-val Scala212 = "2.12.10"
+val Scala212 = "2.12.15"
 
 lazy val sparkSqlScalaPB = project
   .in(file("sparksql-scalapb"))
@@ -27,12 +27,12 @@ lazy val sparkSqlScalaPB = project
     inConfig(Test)(
       sbtprotoc.ProtocPlugin.protobufConfigSettings
     ),
-    PB.targets in Test := Seq(
-      scalapb.gen(grpc = false) -> (sourceManaged in Test).value
+    Test / PB.targets := Seq(
+      scalapb.gen(grpc = false) -> (Test / sourceManaged).value
     )
   )
 
-publishTo in ThisBuild := sonatypePublishToBundle.value
+ThisBuild / publishTo := sonatypePublishToBundle.value
 
 releaseCrossBuild := true
 
