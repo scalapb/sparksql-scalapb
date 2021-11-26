@@ -355,4 +355,15 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       Person()
     )
   }
+
+  "partition column" should "work" in {
+    val record = AddressLike(Some("streetName"), Some("cityName"))
+    spark.createDataset(Seq(record)).write.partitionBy("street")
+      .mode("overwrite")
+      .save("/tmp/partitionned1")
+
+    val ds = spark.read.load("/tmp/partitionned1").as[AddressLike]
+
+    ds.collect() must contain theSameElementsAs Seq(record)
+  }
 }
