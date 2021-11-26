@@ -1,11 +1,9 @@
 package scalapb.spark
 
-import com.example.protos.base.Base
 import com.example.protos.demo.Person.Inner.InnerEnum
 import com.example.protos.demo.{Address, Event, Gender, Hit, Person, SimplePerson}
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession, types, functions => F}
-import org.scalatest.events.TestPending
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
@@ -362,8 +360,22 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       .mode("overwrite")
       .save("/tmp/partitionned1")
 
-    val ds = spark.read.load("/tmp/partitionned1").as[AddressLike]
+    val df = spark.read.schema(spark.emptyDataset[AddressLike].schema).load("/tmp/partitionned1")
+    df.show()
+    df.printSchema()
+    val ds = df.as[AddressLike]
+    ds.show()
 
     ds.collect() must contain theSameElementsAs Seq(record)
+  }
+
+  "useless columns" should "be dropped" in {
+    val record = AddressLike(Some("streetName"), Some("cityName"))
+
+    val ds = spark.createDataset(Seq(record))
+      .withColumn("useless", F.lit(null))
+      .as[AddressLike]
+
+    ds.head() mustBe record
   }
 }
