@@ -105,32 +105,25 @@ object JavaHelpers {
     })
   }
 
+  // ExternalMapToCatalyst only needs iterator. We create this view into s to
+  // avoid making a copy.
   def mkMap(s: Seq[GeneratedMessage]): Map[Any, Any] =
-    new Map[Any, Any] {
-      // ExternalMapToCatalyst only needs iterator. We create this view into s to
-      // avoid making a copy.
-      def get(key: Any): Option[Any] = ???
+    scalapb.spark.internal.MapHelpers.fromIterator {
+      if (s.isEmpty) Iterator.empty
+      else {
+        val cmp = s.head.companion
+        val keyDesc = cmp.scalaDescriptor.findFieldByNumber(1).get
+        val valueDesc = cmp.scalaDescriptor.findFieldByNumber(2).get
 
-      def iterator: Iterator[(Any, Any)] =
-        if (s.isEmpty) Iterator.empty
-        else {
-          val cmp = s.head.companion
-          val keyDesc = cmp.scalaDescriptor.findFieldByNumber(1).get
-          val valueDesc = cmp.scalaDescriptor.findFieldByNumber(2).get
-
-          if (valueDesc.scalaType.isInstanceOf[ScalaType.Message])
-            s.iterator.map { m =>
-              (m.getField(keyDesc), m.getFieldByNumber(valueDesc.number))
-            }
-          else
-            s.iterator.map { m =>
-              (m.getField(keyDesc), m.getField(valueDesc))
-            }
-        }
-
-      def +[V1 >: Any](kv: (Any, V1)): Map[Any, V1] = ???
-
-      def -(key: Any): Map[Any, Any] = ???
+        if (valueDesc.scalaType.isInstanceOf[ScalaType.Message])
+          s.iterator.map { m =>
+            (m.getField(keyDesc), m.getFieldByNumber(valueDesc.number))
+          }
+        else
+          s.iterator.map { m =>
+            (m.getField(keyDesc), m.getField(valueDesc))
+          }
+      }
     }
 
   def isEmpty(pv: PValue): Boolean = pv == PEmpty
