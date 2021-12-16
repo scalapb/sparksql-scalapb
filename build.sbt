@@ -1,5 +1,3 @@
-import ReleaseTransformations._
-
 ThisBuild / organization := "com.thesamet.scalapb"
 
 ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
@@ -126,25 +124,6 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   )
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
-
-releaseCrossBuild := true
-
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  commitReleaseVersion,
-  tagRelease,
-  releaseStepCommandAndRemaining("+publishSigned"),
-  releaseStepCommand("sonatypeBundleRelease"),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges
-)
 
 lazy val root =
   project
