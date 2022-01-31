@@ -50,7 +50,7 @@ class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll
         ArrayType(StringType, false)
       )
     )
-    df.collect must contain theSameElementsAs (
+    df.collect() must contain theSameElementsAs (
       Seq(
         Row(45, "boo", Seq(17, 19, 25), Seq("foo", "bar")),
         Row(null, null, Seq(17, 19, 25), Seq("foo", "bar"))
@@ -75,7 +75,7 @@ class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll
         )
       )
     )
-    df.collect must contain theSameElementsAs (
+    df.collect() must contain theSameElementsAs (
       Seq(
         Row(
           Row(45),
