@@ -2,55 +2,20 @@ package scalapb.spark
 
 import org.apache.spark.sql.catalyst.{InternalRow, ScalaReflection}
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.{AttributeReference, GenericInternalRow}
+import org.apache.spark.sql.catalyst.expressions.{AttributeReference, GenericInternalRow, Literal}
 import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
 import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.execution.ExternalRDD
-import org.apache.spark.sql.{
-  DataFrame,
-  Dataset,
-  Encoder,
-  FramelessInternals,
-  Row,
-  SQLContext,
-  SparkSession
-}
-import org.apache.spark.sql.types.{
-  ArrayType,
-  BinaryType,
-  BooleanType,
-  DataType,
-  DoubleType,
-  FloatType,
-  IntegerType,
-  LongType,
-  StringType,
-  StructField,
-  StructType
-}
+import org.apache.spark.sql.{DataFrame, Dataset, Encoder, FramelessInternals, Row, SQLContext, SparkSession}
+import org.apache.spark.sql.types.{ArrayType, BinaryType, BooleanType, DataType, DoubleType, FloatType, IntegerType, LongType, MapType, Metadata, StringType, StructField, StructType, TimestampType}
 import org.apache.spark.unsafe.types.UTF8String
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
-import scalapb.descriptors.{
-  FieldDescriptor,
-  PBoolean,
-  PByteString,
-  PDouble,
-  PEmpty,
-  PEnum,
-  PFloat,
-  PInt,
-  PLong,
-  PMessage,
-  PRepeated,
-  PString,
-  PValue,
-  ScalaType
-}
+import scalapb.descriptors.{FieldDescriptor, PBoolean, PByteString, PDouble, PEmpty, PEnum, PFloat, PInt, PLong, PMessage, PRepeated, PString, PValue, ScalaType}
 import scalapb.descriptors.Descriptor
 import com.google.protobuf.wrappers.Int32Value
-import org.apache.spark.sql.types.MapType
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData
-import org.apache.spark.sql.types.Metadata
+
+import java.sql.Timestamp
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   self =>
@@ -115,7 +80,14 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
     pMessageToRow(cmp.scalaDescriptor, msg.toPMessage)
   }
 
-  def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any =
+  def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any = {
+    if (schemaOptions.sparkTimestamps && descriptor.fullName == "google.protobuf.Timestamp") {
+      val fSeconds = descriptor.findFieldByName("seconds").get
+      val fNanos = descriptor.findFieldByName("nanos").get
+      val seconds = msg.value.get(fSeconds).get.asInstanceOf[PLong].value
+      val nanos = msg.value.get(fNanos).get.asInstanceOf[PInt].value
+      seconds * 1000000 + nanos / 1000
+    } else
     if (schemaOptions.isUnpackedPrimitiveWrapper(descriptor))
       (for {
         fd <- descriptor.findFieldByName("value")
@@ -126,6 +98,7 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
         )
       )
     else pMessageToRow(descriptor, msg)
+  }
 
   def pMessageToRow(descriptor: Descriptor, msg: PMessage): InternalRow =
     descriptor.fullName match {
@@ -198,6 +171,10 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
 object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
   @deprecated("Primitive wrappers are unpacked by default. Use ProtoSQL directly", "0.11.0")
   lazy val withPrimitiveWrappers: ProtoSQL = new ProtoSQL(SchemaOptions.Default)
+
+  val withSparkTimestamps: ProtoSQL = new ProtoSQL(
+    SchemaOptions.Default.withSparkTimestamps
+  )
 
   val withRetainedPrimitiveWrappers: ProtoSQL = new ProtoSQL(
     SchemaOptions.Default.withRetainedPrimitiveWrappers
