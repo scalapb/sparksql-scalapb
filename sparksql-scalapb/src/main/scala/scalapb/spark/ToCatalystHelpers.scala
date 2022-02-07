@@ -1,19 +1,15 @@
 package scalapb.spark
 
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, StaticInvoke}
-import org.apache.spark.sql.catalyst.expressions.{
-  CreateNamedStruct,
-  Expression,
-  If,
-  IsNull,
-  Literal
-}
-import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType}
+import org.apache.spark.sql.catalyst.expressions.{Add, Cast, CreateNamedStruct, Divide, Expression, If, IsNull, Literal, MicrosLongToTimestamp, Multiply}
+import org.apache.spark.sql.types.{BooleanType, DataType, DataTypes, IntegerType, ObjectType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
 import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
 import org.apache.spark.sql.catalyst.expressions.objects.ExternalMapToCatalyst
 import scalapb.GeneratedMessage
+
+import java.sql.Timestamp
 
 trait ToCatalystHelpers {
   def protoSql: ProtoSQL
@@ -27,6 +23,17 @@ trait ToCatalystHelpers {
     if (protoSql.schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
       val fd = cmp.scalaDescriptor.fields(0)
       fieldToCatalyst(cmp, fd, input)
+    } else if (protoSql.schemaOptions.sparkTimestamps && cmp.scalaDescriptor.fullName == "google.protobuf.Timestamp") {
+      val secondsFd: FieldDescriptor = cmp.scalaDescriptor.fields(0)
+      val nanosFd: FieldDescriptor = cmp.scalaDescriptor.fields(1)
+      val secondsExpr = fieldToCatalyst(cmp, secondsFd, input)
+      val nanosExpr = fieldToCatalyst(cmp, nanosFd, input)
+      MicrosLongToTimestamp(
+        Add(
+          Multiply(secondsExpr, Literal(1000000)),
+          Divide(nanosExpr, Literal(1000))
+        )
+      )
     } else {
       val nameExprs = cmp.scalaDescriptor.fields.map { field =>
         Literal(schemaOptions.columnNaming.fieldName(field))
@@ -175,7 +182,11 @@ trait ToCatalystHelpers {
   ): Expression = {
     val obj = fd.scalaType match {
       case ScalaType.Int        => "intFromPValue"
-      case ScalaType.Long       => "longFromPValue"
+      case ScalaType.Long       =>
+        if (protoSql.schemaOptions.sparkTimestamps && fd.fullName == "google.protobuf.Timestamp")
+          "timestampFromPValue"
+        else
+          "longFromPValue"
       case ScalaType.Float      => "floatFromPValue"
       case ScalaType.Double     => "doubleFromPValue"
       case ScalaType.Boolean    => "booleanFromPValue"
