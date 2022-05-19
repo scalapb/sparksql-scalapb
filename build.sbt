@@ -12,7 +12,7 @@ val Scala212 = "2.12.15"
 
 val Scala213 = "2.13.8"
 
-lazy val Spark32 = Spark("3.2.0")
+lazy val Spark32 = Spark("3.2.1")
 
 lazy val Spark31 = Spark("3.1.3")
 
@@ -44,7 +44,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   .defaultAxes()
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% framelessDatasetName.value % "0.11.1",
+      "org.typelevel" %% framelessDatasetName.value % "0.12.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
