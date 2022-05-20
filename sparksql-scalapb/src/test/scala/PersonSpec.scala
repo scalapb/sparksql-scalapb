@@ -106,7 +106,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   }
 
   "Creating bytestring dataset" should "work" in {
-    val byteStrings =
+    val byteStrings: Seq[ByteString] =
       Seq(ByteString.copyFrom(Array[Byte](1, 2, 3)), ByteString.EMPTY)
     val bytesArrays = byteStrings.map(_.toByteArray)
 
@@ -119,6 +119,11 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       .createDataset(bytesArrays)
       .as[ByteString]
       .collect() must contain theSameElementsAs (byteStrings)
+
+    spark
+      .createDataset(byteStrings)
+      .map(bs => (bs.toString, bs))
+      .show()
   }
 
   "Dataset[Person]" should "work" in {
