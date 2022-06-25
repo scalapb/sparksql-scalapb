@@ -1,15 +1,17 @@
 package scalapb.spark
 
+import com.google.protobuf.timestamp.Timestamp.toJavaProto
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.types._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
-
-import scalapb.spark.test3.customizations.{SQLTimestampFromGoogleTimestamp, StructFromGoogleTimestamp, BothTimestampTypes}
+import scalapb.spark.test3.customizations.{BothTimestampTypes, SQLTimestampFromGoogleTimestamp, StructFromGoogleTimestamp}
 
 import java.sql.{Timestamp => SQLTimestamp}
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
+
+import java.time.Instant
 
 case class TestTimestampsHolder(
                                justLong: Long,
@@ -42,22 +44,30 @@ class TimestampSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   )
 
-  val dataStructFromGoogleTimestamp = Seq(
+  // 4 seconds + 5 microseconds + 6 nanoseconds
+  val googleTimestampNanosPrecision = GoogleTimestamp(4, 5 * 1000 + 6)
+  val googleTimestampMicrosPrecision = GoogleTimestamp(
+    googleTimestampNanosPrecision.seconds,
+    googleTimestampNanosPrecision.nanos / 1000 * 1000)
+  val sqlTimestampMicrosPrecision = SQLTimestamp.from(Instant.ofEpochSecond(googleTimestampMicrosPrecision.seconds, googleTimestampMicrosPrecision.nanos))
+
+  val protoMessagesWithGoogleTimestamp = Seq(
     StructFromGoogleTimestamp(
-      // 4 seconds + 5 microseconds + 6 nanoseconds
-      googleTs = Some(GoogleTimestamp(4, 5 * 1000 + 6))
-    )
+      googleTs = Some(googleTimestampNanosPrecision)
+    ),
+    StructFromGoogleTimestamp(
+      googleTs = Some(googleTimestampNanosPrecision)
+    ),
   )
 
-  val dataSQLTimestampFromGoogleTimestamp = Seq(
-    SQLTimestampFromGoogleTimestamp(
-      googleTsAsSqlTs = Some(new SQLTimestamp(2)),
-    )
+  val protoMessagesWithGoogleTimestampMappedToSQLTimestamp = Seq(
+    SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision)),
+    SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision)),
   )
 
 
-  "df with google timestamp and SchemaOptions of withSparkTimestamps" should "have a spark schema field type of TimestampType" in {
-    val df: DataFrame = ProtoSQL.withSparkTimestamps.createDataFrame(spark, dataStructFromGoogleTimestamp)
+  "ProtoSQL.createDataFrame from proto messages with google timestamp" should "have a spark schema field type of TimestampType" in {
+    val df: DataFrame = ProtoSQL.withSparkTimestamps.createDataFrame(spark, protoMessagesWithGoogleTimestamp)
     df.schema.fields.map(_.dataType).toSeq must be(
       Seq(
         TimestampType,
@@ -65,24 +75,19 @@ class TimestampSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   }
 
-  "df with google timestamp and SchemaOptions of withSparkTimestamps" should "be able to convert values to and from spark TimestampType" in {
-    val df: DataFrame = ProtoSQL.withSparkTimestamps.createDataFrame(spark, dataStructFromGoogleTimestamp)
+  "ProtoSQL.createDataFrame from proto messages with google timestamp" should "be able to collect items with microsecond timestamp precision" in {
+    val df: DataFrame = ProtoSQL.withSparkTimestamps.createDataFrame(spark, protoMessagesWithGoogleTimestamp)
 
     df.collect().map(_.toSeq) must contain theSameElementsAs Seq(
-      Seq(
-        {
-          val ts = new SQLTimestamp(4 * 1000)
-          ts.setNanos(5 * 1000 + 6 * 0)
-          ts
-        }
-      )
+      Seq(sqlTimestampMicrosPrecision),
+      Seq(sqlTimestampMicrosPrecision),
     )
   }
 
-  "ds with google timestamp and SchemaOptions of withSparkTimestamps" should "have a spark schema field type of TimestampType" in {
+  "spark.createDataset from proto messages with google timestamp" should "have a spark schema field type of TimestampType" in {
     import ProtoSQL.withSparkTimestamps.implicits._
 
-    val ds: Dataset[StructFromGoogleTimestamp] = spark.createDataset(dataStructFromGoogleTimestamp)
+    val ds: Dataset[StructFromGoogleTimestamp] = spark.createDataset(protoMessagesWithGoogleTimestamp)
     ds.schema.fields.map(_.dataType).toSeq must be(
       Seq(
         TimestampType,
@@ -90,22 +95,33 @@ class TimestampSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   }
 
-  "ds with google timestamp and SchemaOptions of withSparkTimestamps" should "be able to convert values to and from spark TimestampType" in {
+  "spark.createDataset from proto messages with google timestamp" should "be able to collect items with correct timestamp values" in {
     import ProtoSQL.withSparkTimestamps.implicits._
 
-    val ds: Dataset[StructFromGoogleTimestamp] = spark.createDataset(dataStructFromGoogleTimestamp)
+    val ds: Dataset[StructFromGoogleTimestamp] = spark.createDataset(protoMessagesWithGoogleTimestamp)
     ds.collect() must contain theSameElementsAs Seq(
-      StructFromGoogleTimestamp(
-        // 4 seconds + 5 microseconds + 0 nanoseconds (loss of the nanoseconds)
-        googleTs = Some(GoogleTimestamp(4, 5 * 1000 + 6 * 0))
-      )
+      StructFromGoogleTimestamp(googleTs = Some(googleTimestampMicrosPrecision)),
+      StructFromGoogleTimestamp(googleTs = Some(googleTimestampMicrosPrecision)),
     )
   }
 
-  "ds with sql timestamp and SchemaOptions of withSparkTimestamps" should "have a spark schema field type of TimestampType" in {
+  "spark.createDataset from proto messages with google timestamp" should "be able to convert items with correct timestamp values" in {
     import ProtoSQL.withSparkTimestamps.implicits._
 
-    val ds: Dataset[SQLTimestampFromGoogleTimestamp] = spark.createDataset(dataSQLTimestampFromGoogleTimestamp)
+    val ds: Dataset[StructFromGoogleTimestamp] = spark.createDataset(protoMessagesWithGoogleTimestamp)
+
+    val dsMapped: Dataset[StructFromGoogleTimestamp] = ds.map(record => record)
+
+    dsMapped.collect() must contain theSameElementsAs Seq(
+      StructFromGoogleTimestamp(googleTs = Some(googleTimestampMicrosPrecision)),
+      StructFromGoogleTimestamp(googleTs = Some(googleTimestampMicrosPrecision)),
+    )
+  }
+
+  "spark.createDataset from proto messages with spark timestamp" should "have a spark schema field type of TimestampType" in {
+    import ProtoSQL.withSparkTimestamps.implicits._
+
+    val ds: Dataset[SQLTimestampFromGoogleTimestamp] = spark.createDataset(protoMessagesWithGoogleTimestampMappedToSQLTimestamp)
     ds.schema.fields.map(_.dataType).toSeq must be(
       Seq(
         TimestampType,
@@ -113,14 +129,16 @@ class TimestampSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     )
   }
 
-  "ds with sql timestamp and SchemaOptions of withSparkTimestamps" should "be able to convert values to and from spark TimestampType" in {
+  "spark.createDataset from proto messages with spark timestamp" should "be able to convert items with correct timestamp values" in {
     import ProtoSQL.withSparkTimestamps.implicits._
 
-    val ds: Dataset[SQLTimestampFromGoogleTimestamp] = spark.createDataset(dataSQLTimestampFromGoogleTimestamp)
-    ds.collect() must contain theSameElementsAs Seq(
-      SQLTimestampFromGoogleTimestamp(
-        googleTsAsSqlTs = Some(new SQLTimestamp(2)),
-      )
+    val ds: Dataset[SQLTimestampFromGoogleTimestamp] = spark.createDataset(protoMessagesWithGoogleTimestampMappedToSQLTimestamp)
+
+    val dsMapped = ds.map(record => record)
+
+    dsMapped.collect() must contain theSameElementsAs Seq(
+      SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision)),
+      SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision)),
     )
   }
 

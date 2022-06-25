@@ -1,16 +1,17 @@
 package scalapb.spark
 
 import com.google.protobuf.ByteString
-import org.apache.spark.sql.catalyst.analysis.{UnresolvedAttribute, UnresolvedExtractValue}
+import org.apache.spark.sql.catalyst.analysis.{UnresolvedExtractValue}
 import org.apache.spark.sql.catalyst.expressions
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, NewInstance, StaticInvoke}
-import org.apache.spark.sql.catalyst.expressions.{BoundReference, Cast, CreateArray, Divide, Expression, If, IntegralDivide, IsNull, Literal, Multiply, Remainder, TimestampToMicrosLong, UnaryExpression, Unevaluable}
-import org.apache.spark.sql.types.{DataType, DataTypes, MapType, ObjectType}
+import org.apache.spark.sql.catalyst.expressions.{CreateArray, Expression, If, IsNull, Literal}
+import org.apache.spark.sql.types.{MapType, ObjectType}
 import scalapb.GeneratedMessageCompanion
 import scalapb.descriptors._
 import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
 import org.apache.spark.sql.catalyst.expressions.objects.LambdaVariable
-import org.apache.spark.sql.catalyst.expressions.objects.UnresolvedCatalystToExternalMap
+
+import scala.collection.immutable
 
 trait FromCatalystHelpers {
   def protoSql: ProtoSQL
@@ -21,26 +22,32 @@ trait FromCatalystHelpers {
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
-    val args =
+    val args: immutable.Seq[Expression] =
       if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor))
         cmp.scalaDescriptor.fields.map { fd =>
           fieldFromCatalyst(cmp, fd, input)
         }
       else if (schemaOptions.sparkTimestamps && cmp.scalaDescriptor.fullName == "google.protobuf.Timestamp") {
-        cmp.scalaDescriptor.fields.map { fd =>
-          if (fd.fullName == "google.protobuf.Timestamp.seconds") {
-            NewInstance(classOf[PLong], IntegralDivide(TimestampToMicrosLong(input), Literal(1000000)) :: Nil, ObjectType(classOf[PValue]))
-          } else if (fd.fullName == "google.protobuf.Timestamp.nanos") {
-            NewInstance(classOf[PInt], Cast(Multiply(Remainder(TimestampToMicrosLong(input), Literal(1000000)), Literal(1000)), DataTypes.IntegerType) :: Nil, ObjectType(classOf[PValue]))
-          } else {
-            throw new RuntimeException()
-          }
-        }
+        immutable.Seq(
+          StaticInvoke(
+            JavaTimestampHelpers.getClass,
+            ObjectType(classOf[PValue]),
+            "extractSecondsFromMicrosTimestamp",
+            input :: Nil
+          ),
+          StaticInvoke(
+            JavaTimestampHelpers.getClass,
+            ObjectType(classOf[PValue]),
+            "extractNanosFromMicrosTimestamp",
+            input :: Nil
+          ),
+        )
       } else {
-        cmp.scalaDescriptor.fields.map { fd =>
+        val expressions: immutable.Seq[Expression] = cmp.scalaDescriptor.fields.map { fd =>
           val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
           fieldFromCatalyst(cmp, fd, newPath)
         }
+        expressions
       }
     val outputType = ObjectType(classOf[PValue])
     val mapArgs =

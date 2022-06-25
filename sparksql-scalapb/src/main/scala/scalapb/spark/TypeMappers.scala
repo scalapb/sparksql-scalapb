@@ -4,20 +4,17 @@ import java.sql.{Timestamp => SQLTimestamp}
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
 import scalapb.TypeMapper
 
-object TypeMappers {
+import java.time.Instant
 
-//  implicit val msToTimestampMapper: TypeMapper[Long, SQLTimestamp] = TypeMapper({
-//    ms: Long => new SQLTimestamp(ms)
-//  })(_.getTime)
+object TypeMappers {
 
   implicit val googleTsToSqlTsMapper: TypeMapper[GoogleTimestamp, SQLTimestamp] = TypeMapper({
     googleTs: GoogleTimestamp =>
-      val sqlTs = new SQLTimestamp(googleTs.seconds * 1000000)
-      sqlTs.setNanos(googleTs.nanos)
-      sqlTs
+      SQLTimestamp.from(Instant.ofEpochSecond(googleTs.seconds, googleTs.nanos))
   })({
     sqlTs: SQLTimestamp =>
-      new GoogleTimestamp(sqlTs.getTime / 1000000, sqlTs.getNanos)
+      val instant = sqlTs.toInstant
+      new GoogleTimestamp(instant.getEpochSecond, instant.getNano)
   })
 
 }

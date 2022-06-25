@@ -1,15 +1,12 @@
 package scalapb.spark
 
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, StaticInvoke}
-import org.apache.spark.sql.catalyst.expressions.{Add, Cast, CreateNamedStruct, Divide, Expression, If, IsNull, Literal, MicrosLongToTimestamp, Multiply}
-import org.apache.spark.sql.types.{BooleanType, DataType, DataTypes, IntegerType, ObjectType}
+import org.apache.spark.sql.catalyst.expressions.{CreateNamedStruct, Expression, If, IsNull, Literal}
+import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType, TimestampType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
-import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
 import org.apache.spark.sql.catalyst.expressions.objects.ExternalMapToCatalyst
 import scalapb.GeneratedMessage
-
-import java.sql.Timestamp
 
 trait ToCatalystHelpers {
   def protoSql: ProtoSQL
@@ -28,11 +25,11 @@ trait ToCatalystHelpers {
       val nanosFd: FieldDescriptor = cmp.scalaDescriptor.fields(1)
       val secondsExpr = fieldToCatalyst(cmp, secondsFd, input)
       val nanosExpr = fieldToCatalyst(cmp, nanosFd, input)
-      MicrosLongToTimestamp(
-        Add(
-          Multiply(secondsExpr, Literal(1000000)),
-          Divide(nanosExpr, Literal(1000))
-        )
+      StaticInvoke(
+        JavaTimestampHelpers.getClass,
+        TimestampType,
+        "combineSecondsAndNanosIntoMicrosTimestamp",
+        secondsExpr :: nanosExpr :: Nil
       )
     } else {
       val nameExprs = cmp.scalaDescriptor.fields.map { field =>
@@ -182,11 +179,7 @@ trait ToCatalystHelpers {
   ): Expression = {
     val obj = fd.scalaType match {
       case ScalaType.Int        => "intFromPValue"
-      case ScalaType.Long       =>
-        if (protoSql.schemaOptions.sparkTimestamps && fd.fullName == "google.protobuf.Timestamp")
-          "timestampFromPValue"
-        else
-          "longFromPValue"
+      case ScalaType.Long       => "longFromPValue"
       case ScalaType.Float      => "floatFromPValue"
       case ScalaType.Double     => "doubleFromPValue"
       case ScalaType.Boolean    => "booleanFromPValue"
