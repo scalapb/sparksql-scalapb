@@ -8,17 +8,17 @@ Global / concurrentRestrictions := Seq(
   Tags.limit(Tags.Test, 1)
 )
 
-val Scala212 = "2.12.15"
+val Scala212 = "2.12.16"
 
 val Scala213 = "2.13.8"
 
-lazy val Spark32 = Spark("3.2.1")
+lazy val Spark32 = Spark("3.2.2")
 
 lazy val Spark31 = Spark("3.1.3")
 
 lazy val Spark30 = Spark("3.0.3")
 
-lazy val ScalaPB0_11 = ScalaPB("0.11.10")
+lazy val ScalaPB0_11 = ScalaPB("0.11.11")
 
 lazy val ScalaPB0_10 = ScalaPB("0.10.11")
 
