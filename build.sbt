@@ -44,7 +44,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   .defaultAxes()
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% framelessDatasetName.value % "0.12.0",
+      "org.typelevel" %% framelessDatasetName.value % "0.13.0",
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
