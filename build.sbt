@@ -49,7 +49,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "test",
-      "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+      "org.scalatest" %% "scalatest" % "3.2.13" % "test",
       "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % "test",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.15" % "1.3.0" % "test"
     ),
