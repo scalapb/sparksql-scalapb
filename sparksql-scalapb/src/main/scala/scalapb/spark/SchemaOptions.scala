@@ -1,18 +1,13 @@
 package scalapb.spark
 
-import scalapb.descriptors.FieldDescriptor
-import scalapb.GeneratedMessage
-import scalapb.GeneratedMessageCompanion
-import com.google.protobuf.Field
-import org.apache.parquet.example.data.simple.Primitive
-import org.apache.arrow.flatbuf.Schema
-import scalapb.descriptors.Descriptor
-import org.apache.spark.sql.types.{BinaryType, BooleanType, DataType, DoubleType, FloatType, IntegerType, LongType, StringType, TimestampType}
+import org.apache.spark.sql.types._
+import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
+import scalapb.descriptors.{Descriptor, FieldDescriptor}
 
 case class SchemaOptions(
     columnNaming: ColumnNaming,
     retainPrimitiveWrappers: Boolean,
-    sparkTimestamps: Boolean,
+    catalystMappers: Seq[CatalystMapper]
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -20,11 +15,13 @@ case class SchemaOptions(
 
   def withRetainedPrimitiveWrappers = copy(retainPrimitiveWrappers = true)
 
-  def withSparkTimestamps = copy(sparkTimestamps = true)
+  def withCatalystMappers(catalystMappers: Seq[CatalystMapper]) =
+    copy(catalystMappers = catalystMappers)
 
   private[scalapb] def customDataTypeFor(message: Descriptor): Option[DataType] = {
-    if (sparkTimestamps && message.fullName == "google.protobuf.Timestamp") Some(TimestampType)
-    else if (retainPrimitiveWrappers) None
+    if (catalystMappers.exists(_.convertedType(message).isDefined)) {
+      catalystMappers.filter(_.convertedType(message).isDefined).map(_.convertedType(message)).head
+    } else if (retainPrimitiveWrappers) None
     else SchemaOptions.PrimitiveWrapperTypes.get(message)
   }
 
@@ -33,7 +30,8 @@ case class SchemaOptions(
 }
 
 object SchemaOptions {
-  val Default = SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, sparkTimestamps = false)
+  val Default =
+    SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, catalystMappers = Seq())
 
   def apply(): SchemaOptions = Default
 

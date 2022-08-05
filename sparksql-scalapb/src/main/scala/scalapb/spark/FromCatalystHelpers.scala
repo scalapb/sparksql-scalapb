@@ -3,7 +3,12 @@ package scalapb.spark
 import com.google.protobuf.ByteString
 import org.apache.spark.sql.catalyst.analysis.{UnresolvedExtractValue}
 import org.apache.spark.sql.catalyst.expressions
-import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, NewInstance, StaticInvoke}
+import org.apache.spark.sql.catalyst.expressions.objects.{
+  Invoke,
+  MapObjects,
+  NewInstance,
+  StaticInvoke
+}
 import org.apache.spark.sql.catalyst.expressions.{CreateArray, Expression, If, IsNull, Literal}
 import org.apache.spark.sql.types.{MapType, ObjectType}
 import scalapb.GeneratedMessageCompanion
@@ -23,25 +28,17 @@ trait FromCatalystHelpers {
       input: Expression
   ): Expression = {
     val args: immutable.Seq[Expression] =
-      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor))
+      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
         cmp.scalaDescriptor.fields.map { fd =>
           fieldFromCatalyst(cmp, fd, input)
         }
-      else if (schemaOptions.sparkTimestamps && cmp.scalaDescriptor.fullName == "google.protobuf.Timestamp") {
-        immutable.Seq(
-          StaticInvoke(
-            JavaTimestampHelpers.getClass,
-            ObjectType(classOf[PValue]),
-            "extractSecondsFromMicrosTimestamp",
-            input :: Nil
-          ),
-          StaticInvoke(
-            JavaTimestampHelpers.getClass,
-            ObjectType(classOf[PValue]),
-            "extractNanosFromMicrosTimestamp",
-            input :: Nil
-          ),
-        )
+      } else if (
+        schemaOptions.catalystMappers.exists(_.convertedType(cmp.scalaDescriptor).isDefined)
+      ) {
+        schemaOptions.catalystMappers
+          .filter(_.convertedType(cmp.scalaDescriptor).isDefined)
+          .map(_.fromCatalyst(cmp, input, this))
+          .head
       } else {
         val expressions: immutable.Seq[Expression] = cmp.scalaDescriptor.fields.map { fd =>
           val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
