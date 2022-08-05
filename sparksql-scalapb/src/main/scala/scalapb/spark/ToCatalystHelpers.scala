@@ -1,7 +1,13 @@
 package scalapb.spark
 
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, MapObjects, StaticInvoke}
-import org.apache.spark.sql.catalyst.expressions.{CreateNamedStruct, Expression, If, IsNull, Literal}
+import org.apache.spark.sql.catalyst.expressions.{
+  CreateNamedStruct,
+  Expression,
+  If,
+  IsNull,
+  Literal
+}
 import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType, TimestampType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
@@ -20,17 +26,13 @@ trait ToCatalystHelpers {
     if (protoSql.schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
       val fd = cmp.scalaDescriptor.fields(0)
       fieldToCatalyst(cmp, fd, input)
-    } else if (protoSql.schemaOptions.sparkTimestamps && cmp.scalaDescriptor.fullName == "google.protobuf.Timestamp") {
-      val secondsFd: FieldDescriptor = cmp.scalaDescriptor.fields(0)
-      val nanosFd: FieldDescriptor = cmp.scalaDescriptor.fields(1)
-      val secondsExpr = fieldToCatalyst(cmp, secondsFd, input)
-      val nanosExpr = fieldToCatalyst(cmp, nanosFd, input)
-      StaticInvoke(
-        JavaTimestampHelpers.getClass,
-        TimestampType,
-        "combineSecondsAndNanosIntoMicrosTimestamp",
-        secondsExpr :: nanosExpr :: Nil
-      )
+    } else if (
+      schemaOptions.catalystMappers.exists(_.convertedType(cmp.scalaDescriptor).isDefined)
+    ) {
+      schemaOptions.catalystMappers
+        .filter(_.convertedType(cmp.scalaDescriptor).isDefined)
+        .map(_.toCatalyst(cmp, input, this))
+        .head
     } else {
       val nameExprs = cmp.scalaDescriptor.fields.map { field =>
         Literal(schemaOptions.columnNaming.fieldName(field))

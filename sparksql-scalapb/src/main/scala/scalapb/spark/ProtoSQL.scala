@@ -1,21 +1,16 @@
 package scalapb.spark
 
-import org.apache.spark.sql.catalyst.{InternalRow, ScalaReflection}
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.{AttributeReference, GenericInternalRow, Literal}
+import org.apache.spark.sql.catalyst.expressions.AttributeReference
 import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
-import org.apache.spark.sql.catalyst.util.GenericArrayData
+import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, GenericArrayData}
 import org.apache.spark.sql.execution.ExternalRDD
-import org.apache.spark.sql.{DataFrame, Dataset, Encoder, FramelessInternals, Row, SQLContext, SparkSession}
-import org.apache.spark.sql.types.{ArrayType, BinaryType, BooleanType, DataType, DoubleType, FloatType, IntegerType, LongType, MapType, Metadata, StringType, StructField, StructType, TimestampType}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql._
 import org.apache.spark.unsafe.types.UTF8String
-import scalapb.{GeneratedMessage, GeneratedMessageCompanion, Message}
-import scalapb.descriptors.{FieldDescriptor, PBoolean, PByteString, PDouble, PEmpty, PEnum, PFloat, PInt, PLong, PMessage, PRepeated, PString, PValue, ScalaType}
-import scalapb.descriptors.Descriptor
-import com.google.protobuf.wrappers.Int32Value
-import org.apache.spark.sql.catalyst.util.ArrayBasedMapData
-
-import java.sql.Timestamp
+import scalapb.descriptors._
+import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   self =>
@@ -81,14 +76,12 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   }
 
   def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any = {
-    if (schemaOptions.sparkTimestamps && descriptor.fullName == "google.protobuf.Timestamp") {
-      val fSeconds = descriptor.findFieldByName("seconds").get
-      val fNanos = descriptor.findFieldByName("nanos").get
-      val seconds = msg.value.get(fSeconds).get.asInstanceOf[PLong].value
-      val nanos = msg.value.get(fNanos).get.asInstanceOf[PInt].value
-      seconds * 1000000 + nanos / 1000
-    } else
-    if (schemaOptions.isUnpackedPrimitiveWrapper(descriptor))
+    if (schemaOptions.catalystMappers.exists(_.convertedType(descriptor).isDefined)) {
+      schemaOptions.catalystMappers
+        .filter(_.convertedType(descriptor).isDefined)
+        .map(_.convertMessage(descriptor, msg))
+        .head
+    } else if (schemaOptions.isUnpackedPrimitiveWrapper(descriptor))
       (for {
         fd <- descriptor.findFieldByName("value")
         value <- msg.value.get(fd)
@@ -173,7 +166,7 @@ object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
   lazy val withPrimitiveWrappers: ProtoSQL = new ProtoSQL(SchemaOptions.Default)
 
   val withSparkTimestamps: ProtoSQL = new ProtoSQL(
-    SchemaOptions.Default.withSparkTimestamps
+    SchemaOptions.Default.withCatalystMappers(Seq(GoogleTimestampCatalystMapper))
   )
 
   val withRetainedPrimitiveWrappers: ProtoSQL = new ProtoSQL(
