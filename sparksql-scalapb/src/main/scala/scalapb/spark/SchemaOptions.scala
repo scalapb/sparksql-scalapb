@@ -7,18 +7,12 @@ import com.google.protobuf.Field
 import org.apache.parquet.example.data.simple.Primitive
 import org.apache.arrow.flatbuf.Schema
 import scalapb.descriptors.Descriptor
-import org.apache.spark.sql.types.DataType
-import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.types.BooleanType
-import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.FloatType
-import org.apache.spark.sql.types.BinaryType
+import org.apache.spark.sql.types.{BinaryType, BooleanType, DataType, DoubleType, FloatType, IntegerType, LongType, StringType, TimestampType}
 
 case class SchemaOptions(
     columnNaming: ColumnNaming,
-    retainPrimitiveWrappers: Boolean
+    retainPrimitiveWrappers: Boolean,
+    sparkTimestamps: Boolean,
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -26,16 +20,20 @@ case class SchemaOptions(
 
   def withRetainedPrimitiveWrappers = copy(retainPrimitiveWrappers = true)
 
-  private[scalapb] def customDataTypeFor(message: Descriptor): Option[DataType] =
-    if (retainPrimitiveWrappers) None
+  def withSparkTimestamps = copy(sparkTimestamps = true)
+
+  private[scalapb] def customDataTypeFor(message: Descriptor): Option[DataType] = {
+    if (sparkTimestamps && message.fullName == "google.protobuf.Timestamp") Some(TimestampType)
+    else if (retainPrimitiveWrappers) None
     else SchemaOptions.PrimitiveWrapperTypes.get(message)
+  }
 
   private[scalapb] def isUnpackedPrimitiveWrapper(message: Descriptor) =
     !retainPrimitiveWrappers && SchemaOptions.PrimitiveWrapperTypes.contains(message)
 }
 
 object SchemaOptions {
-  val Default = SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false)
+  val Default = SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, sparkTimestamps = false)
 
   def apply(): SchemaOptions = Default
 

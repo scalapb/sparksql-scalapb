@@ -41,11 +41,13 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Seri
 
       val read = Invoke(reads, "read", ObjectType(classOf[Function[_, _]]))
 
-      Invoke(read, "apply", ObjectType(ct.runtimeClass), expr :: Nil)
+      val ret = Invoke(read, "apply", ObjectType(ct.runtimeClass), expr :: Nil)
+      ret
     }
 
     override def toCatalyst(path: Expression): Expression = {
-      messageToCatalyst(cmp, path)
+      val ret = messageToCatalyst(cmp, path)
+      ret
     }
   }
 

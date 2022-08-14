@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package scalapb.spark.test3;
+
+import "google/protobuf/timestamp.proto";
+import "scalapb/scalapb.proto";
+
+message StructFromGoogleTimestamp {
+  google.protobuf.Timestamp google_ts = 1;
+}
+
+// Needed to be able to represent the case class property as java.sql.Timestamp
+option (scalapb.options) = {
+  import: "scalapb.spark.TypeMappers._"
+};
+
+message SQLTimestampFromGoogleTimestamp {
+  google.protobuf.Timestamp google_ts_as_sql_ts = 1 [(scalapb.field).type = "java.sql.Timestamp"];
+}
+
+message BothTimestampTypes {
+  google.protobuf.Timestamp google_ts = 1;
+  google.protobuf.Timestamp google_ts_as_sql_ts = 2 [(scalapb.field).type = "java.sql.Timestamp"];
+}
