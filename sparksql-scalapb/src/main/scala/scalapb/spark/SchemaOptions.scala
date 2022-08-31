@@ -7,7 +7,7 @@ import scalapb.descriptors.{Descriptor, FieldDescriptor}
 case class SchemaOptions(
     columnNaming: ColumnNaming,
     retainPrimitiveWrappers: Boolean,
-    catalystMappers: Seq[CatalystMapper]
+    catalystMappers: Map[GeneratedMessageCompanion[_], CatalystMapper[_]]
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -15,14 +15,17 @@ case class SchemaOptions(
 
   def withRetainedPrimitiveWrappers = copy(retainPrimitiveWrappers = true)
 
-  def withCatalystMappers(catalystMappers: Seq[CatalystMapper]) =
+  def withCatalystMappers(catalystMappers: Map[GeneratedMessageCompanion[_], CatalystMapper[_]]) =
     copy(catalystMappers = catalystMappers)
 
   private[scalapb] def customDataTypeFor(message: Descriptor): Option[DataType] = {
-    if (catalystMappers.exists(_.convertedType(message).isDefined)) {
-      catalystMappers.filter(_.convertedType(message).isDefined).map(_.convertedType(message)).head
-    } else if (retainPrimitiveWrappers) None
-    else SchemaOptions.PrimitiveWrapperTypes.get(message)
+    if (catalystMappers.exists(t => t._1.scalaDescriptor == message)) {
+      catalystMappers.filter(t => t._1.scalaDescriptor == message).map(_._2.catalystRepr).headOption
+    } else if (retainPrimitiveWrappers) {
+      None
+    } else {
+      SchemaOptions.PrimitiveWrapperTypes.get(message)
+    }
   }
 
   private[scalapb] def isUnpackedPrimitiveWrapper(message: Descriptor) =
@@ -31,7 +34,7 @@ case class SchemaOptions(
 
 object SchemaOptions {
   val Default =
-    SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, catalystMappers = Seq())
+    SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, catalystMappers = Map())
 
   def apply(): SchemaOptions = Default
 

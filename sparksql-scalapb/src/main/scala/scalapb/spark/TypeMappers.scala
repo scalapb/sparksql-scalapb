@@ -13,7 +13,7 @@ object TypeMappers {
       SQLTimestamp.from(Instant.ofEpochSecond(googleTs.seconds, googleTs.nanos))
     })({ sqlTs: SQLTimestamp =>
       val instant = sqlTs.toInstant
-      new GoogleTimestamp(instant.getEpochSecond, instant.getNano)
+      GoogleTimestamp(instant.getEpochSecond, instant.getNano)
     })
 
 }

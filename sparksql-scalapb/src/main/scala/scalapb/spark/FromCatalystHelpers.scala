@@ -27,25 +27,32 @@ trait FromCatalystHelpers {
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
-    val args: immutable.Seq[Expression] =
-      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
-        cmp.scalaDescriptor.fields.map { fd =>
-          fieldFromCatalyst(cmp, fd, input)
+    schemaOptions.catalystMappers.get(cmp) match {
+      case Some(encoder) =>
+        encoder.fromCatalyst(input)
+      case None =>
+        val args: immutable.Seq[Expression] = {
+          if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
+            cmp.scalaDescriptor.fields.map { fd =>
+              fieldFromCatalyst(cmp, fd, input)
+            }
+          } else {
+            val expressions: immutable.Seq[Expression] = cmp.scalaDescriptor.fields.map { fd =>
+              val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
+              fieldFromCatalyst(cmp, fd, newPath)
+            }
+            expressions
+          }
         }
-      } else if (
-        schemaOptions.catalystMappers.exists(_.convertedType(cmp.scalaDescriptor).isDefined)
-      ) {
-        schemaOptions.catalystMappers
-          .filter(_.convertedType(cmp.scalaDescriptor).isDefined)
-          .map(_.fromCatalyst(cmp, input, this))
-          .head
-      } else {
-        val expressions: immutable.Seq[Expression] = cmp.scalaDescriptor.fields.map { fd =>
-          val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
-          fieldFromCatalyst(cmp, fd, newPath)
-        }
-        expressions
-      }
+        pmessageFromCatalyst(input, cmp, args)
+    }
+  }
+
+  def pmessageFromCatalyst(
+      input: Expression,
+      cmp: GeneratedMessageCompanion[_],
+      args: Seq[Expression]
+  ): Expression = {
     val outputType = ObjectType(classOf[PValue])
     val mapArgs =
       StaticInvoke(
