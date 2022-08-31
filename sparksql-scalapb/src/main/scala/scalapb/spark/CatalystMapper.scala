@@ -1,43 +1,32 @@
 package scalapb.spark
 
+import com.google.protobuf.timestamp.Timestamp
+import frameless.{SQLDate, SQLTimestamp, TypedEncoder}
+import org.apache.spark.sql.catalyst.ScalaReflection
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.objects.StaticInvoke
-import org.apache.spark.sql.types.{DataType, ObjectType, TimestampType}
-import scalapb.GeneratedMessageCompanion
-import scalapb.descriptors.{Descriptor, FieldDescriptor, PInt, PLong, PMessage, PValue}
+import org.apache.spark.sql.types.{DataType, DateType, ObjectType, TimestampType}
+import scalapb.descriptors._
 
 import scala.collection.immutable
 
-trait CatalystMapper {
-  def convertedType(descriptor: Descriptor): Option[DataType]
-  def fromCatalyst(
-      cmp: GeneratedMessageCompanion[_],
-      input: Expression,
-      helpers: FromCatalystHelpers
-  ): immutable.Seq[Expression]
-  def toCatalyst(
-      cmp: GeneratedMessageCompanion[_],
-      input: Expression,
-      helpers: ToCatalystHelpers
-  ): Expression
+trait CatalystMapper[T] extends TypedEncoder[T] {
   def convertMessage(descriptor: Descriptor, msg: PMessage): Any
 }
 
-object GoogleTimestampCatalystMapper extends CatalystMapper {
-  override def convertedType(descriptor: Descriptor): Option[DataType] = {
-    if (descriptor.fullName == "google.protobuf.Timestamp") {
-      Some(TimestampType)
-    } else {
-      None
-    }
-  }
+class GoogleTimestampCatalystMapper(
+    fromCatalystHelpers: FromCatalystHelpers,
+    toCatalystHelpers: ToCatalystHelpers
+) extends CatalystMapper[Timestamp] {
+  override def nullable: Boolean = false
 
-  override def fromCatalyst(
-      cmp: GeneratedMessageCompanion[_],
-      input: Expression,
-      helpers: FromCatalystHelpers
-  ): immutable.Seq[Expression] = {
-    immutable.Seq(
+  override def jvmRepr: DataType = ScalaReflection.dataTypeFor[SQLTimestamp]
+
+  override def catalystRepr: DataType = TimestampType
+
+  override def fromCatalyst(input: Expression): Expression = {
+    val cmp = Timestamp.messageCompanion
+    val args = immutable.Seq(
       StaticInvoke(
         JavaTimestampHelpers.getClass,
         ObjectType(classOf[PValue]),
@@ -51,17 +40,15 @@ object GoogleTimestampCatalystMapper extends CatalystMapper {
         input :: Nil
       )
     )
+    fromCatalystHelpers.pmessageFromCatalyst(input, cmp, args)
   }
 
-  override def toCatalyst(
-      cmp: GeneratedMessageCompanion[_],
-      input: Expression,
-      helpers: ToCatalystHelpers
-  ): Expression = {
+  override def toCatalyst(input: Expression): Expression = {
+    val cmp = Timestamp.messageCompanion
     val secondsFd: FieldDescriptor = cmp.scalaDescriptor.fields(0)
     val nanosFd: FieldDescriptor = cmp.scalaDescriptor.fields(1)
-    val secondsExpr = helpers.fieldToCatalyst(cmp, secondsFd, input)
-    val nanosExpr = helpers.fieldToCatalyst(cmp, nanosFd, input)
+    val secondsExpr = toCatalystHelpers.fieldToCatalyst(cmp, secondsFd, input)
+    val nanosExpr = toCatalystHelpers.fieldToCatalyst(cmp, nanosFd, input)
     StaticInvoke(
       JavaTimestampHelpers.getClass,
       TimestampType,

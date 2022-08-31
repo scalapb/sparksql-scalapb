@@ -1,5 +1,6 @@
 package scalapb.spark
 
+import com.google.protobuf.timestamp.Timestamp
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.catalyst.expressions.AttributeReference
@@ -76,10 +77,10 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   }
 
   def pMessageToRowOrAny(descriptor: Descriptor, msg: PMessage): Any = {
-    if (schemaOptions.catalystMappers.exists(_.convertedType(descriptor).isDefined)) {
+    if (schemaOptions.catalystMappers.exists(t => t._1.scalaDescriptor == descriptor)) {
       schemaOptions.catalystMappers
-        .filter(_.convertedType(descriptor).isDefined)
-        .map(_.convertMessage(descriptor, msg))
+        .filter(t => t._1.scalaDescriptor == descriptor)
+        .map(_._2.convertMessage(descriptor, msg))
         .head
     } else if (schemaOptions.isUnpackedPrimitiveWrapper(descriptor))
       (for {
@@ -166,7 +167,14 @@ object ProtoSQL extends ProtoSQL(SchemaOptions.Default) {
   lazy val withPrimitiveWrappers: ProtoSQL = new ProtoSQL(SchemaOptions.Default)
 
   val withSparkTimestamps: ProtoSQL = new ProtoSQL(
-    SchemaOptions.Default.withCatalystMappers(Seq(GoogleTimestampCatalystMapper))
+    SchemaOptions.Default.withCatalystMappers(
+      Map(
+        Timestamp.messageCompanion -> new GoogleTimestampCatalystMapper(
+          this.implicits.typedEncoders,
+          this.implicits.typedEncoders
+        )
+      )
+    )
   )
 
   val withRetainedPrimitiveWrappers: ProtoSQL = new ProtoSQL(

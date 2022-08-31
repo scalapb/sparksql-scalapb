@@ -22,35 +22,34 @@ trait ToCatalystHelpers {
   def messageToCatalyst(
       cmp: GeneratedMessageCompanion[_],
       input: Expression
-  ): Expression =
-    if (protoSql.schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
-      val fd = cmp.scalaDescriptor.fields(0)
-      fieldToCatalyst(cmp, fd, input)
-    } else if (
-      schemaOptions.catalystMappers.exists(_.convertedType(cmp.scalaDescriptor).isDefined)
-    ) {
-      schemaOptions.catalystMappers
-        .filter(_.convertedType(cmp.scalaDescriptor).isDefined)
-        .map(_.toCatalyst(cmp, input, this))
-        .head
-    } else {
-      val nameExprs = cmp.scalaDescriptor.fields.map { field =>
-        Literal(schemaOptions.columnNaming.fieldName(field))
-      }
+  ): Expression = {
+    schemaOptions.catalystMappers.get(cmp) match {
+      case Some(encoder) =>
+        encoder.toCatalyst(input)
+      case None =>
+        if (protoSql.schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
+          val fd = cmp.scalaDescriptor.fields(0)
+          fieldToCatalyst(cmp, fd, input)
+        } else {
+          val nameExprs = cmp.scalaDescriptor.fields.map { field =>
+            Literal(schemaOptions.columnNaming.fieldName(field))
+          }
 
-      val valueExprs = cmp.scalaDescriptor.fields.map { field =>
-        fieldToCatalyst(cmp, field, input)
-      }
+          val valueExprs = cmp.scalaDescriptor.fields.map { field =>
+            fieldToCatalyst(cmp, field, input)
+          }
 
-      // the way exprs are encoded in CreateNamedStruct
-      val exprs = nameExprs.zip(valueExprs).flatMap { case (nameExpr, valueExpr) =>
-        nameExpr :: valueExpr :: Nil
-      }
+          // the way exprs are encoded in CreateNamedStruct
+          val exprs = nameExprs.zip(valueExprs).flatMap { case (nameExpr, valueExpr) =>
+            nameExpr :: valueExpr :: Nil
+          }
 
-      val createExpr = CreateNamedStruct(exprs)
-      val nullExpr = Literal.create(null, createExpr.dataType)
-      If(IsNull(input), nullExpr, createExpr)
+          val createExpr = CreateNamedStruct(exprs)
+          val nullExpr = Literal.create(null, createExpr.dataType)
+          If(IsNull(input), nullExpr, createExpr)
+        }
     }
+  }
 
   def fieldGetterAndTransformer(
       cmp: GeneratedMessageCompanion[_],
