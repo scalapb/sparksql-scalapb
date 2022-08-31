@@ -106,7 +106,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   }
 
   "Creating bytestring dataset" should "work" in {
-    val byteStrings =
+    val byteStrings: Seq[ByteString] =
       Seq(ByteString.copyFrom(Array[Byte](1, 2, 3)), ByteString.EMPTY)
     val bytesArrays = byteStrings.map(_.toByteArray)
 
@@ -119,6 +119,11 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       .createDataset(bytesArrays)
       .as[ByteString]
       .collect() must contain theSameElementsAs (byteStrings)
+
+    spark
+      .createDataset(byteStrings)
+      .map(bs => (bs.toString, bs))
+      .show()
   }
 
   "Dataset[Person]" should "work" in {
@@ -131,7 +136,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     ds.select("data").printSchema()
     ds.select(F.sha1(F.col("data"))).printSchema()
     ds.show()
-    ds.toDF.printSchema()
+    ds.toDF().printSchema()
   }
 
   "as[SimplePerson]" should "work for manual building" in {
@@ -319,7 +324,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   "OuterCaseClass" should "use our type encoders" in {
     val outer = OuterCaseClass(TestPerson, "foo")
-    val df = spark.createDataset(Seq(outer)).toDF
+    val df = spark.createDataset(Seq(outer)).toDF()
     df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
   }
 
@@ -337,7 +342,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
     val ts = Timestamp.valueOf("2020-11-17 21:34:56.157")
     val outer = OuterCaseClassTimestamp(TestPerson, ts)
-    val df = spark.createDataset(Seq(outer)).toDF
+    val df = spark.createDataset(Seq(outer)).toDF()
 
     df.select($"x.*").as[Person].collect() must contain theSameElementsAs (Seq(TestPerson))
     df.select($"y").as[Timestamp].collect() must contain theSameElementsAs Seq(ts)
