@@ -27,9 +27,14 @@ trait FromCatalystHelpers {
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
-    schemaOptions.catalystMappers.get(cmp) match {
+    schemaOptions.messageEncoders.get(cmp.scalaDescriptor) match {
       case Some(encoder) =>
-        encoder.fromCatalyst(input)
+        StaticInvoke(
+          JavaHelpers.getClass,
+          ObjectType(classOf[PValue]),
+          "toPMessageAsPValue",
+          encoder.fromCatalyst(input) :: Nil
+        )
       case None =>
         val args: immutable.Seq[Expression] = {
           if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {

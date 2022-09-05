@@ -3,11 +3,14 @@ package scalapb.spark
 import org.apache.spark.sql.types._
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 import scalapb.descriptors.{Descriptor, FieldDescriptor}
+import frameless.TypedEncoder
+import org.apache.spark.sql.catalyst.plans.logical.Generate
+import scala.util.control
 
 case class SchemaOptions(
     columnNaming: ColumnNaming,
     retainPrimitiveWrappers: Boolean,
-    catalystMappers: Map[GeneratedMessageCompanion[_], CatalystMapper[_]]
+    messageEncoders: Map[Descriptor, TypedEncoder[_]]
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -15,18 +18,27 @@ case class SchemaOptions(
 
   def withRetainedPrimitiveWrappers = copy(retainPrimitiveWrappers = true)
 
-  def withCatalystMappers(catalystMappers: Map[GeneratedMessageCompanion[_], CatalystMapper[_]]) =
-    copy(catalystMappers = catalystMappers)
+  def withMessageEncoders(messageEncoders: Map[Descriptor, TypedEncoder[_]]) =
+    copy(messageEncoders = messageEncoders)
 
-  private[scalapb] def customDataTypeFor(message: Descriptor): Option[DataType] = {
-    if (catalystMappers.exists(t => t._1.scalaDescriptor == message)) {
-      catalystMappers.filter(t => t._1.scalaDescriptor == message).map(_._2.catalystRepr).headOption
-    } else if (retainPrimitiveWrappers) {
-      None
-    } else {
-      SchemaOptions.PrimitiveWrapperTypes.get(message)
-    }
+  def addMessageEncoder[T <: GeneratedMessage](
+      typedEncoder: TypedEncoder[T]
+  )(implicit cmp: GeneratedMessageCompanion[T]): SchemaOptions = {
+    copy(messageEncoders = messageEncoders + (cmp.scalaDescriptor -> typedEncoder))
   }
+
+  def withSparkTimestamps = addMessageEncoder(CustomTypedEncoders.timestampToSqlTimestamp)
+
+  private[scalapb] def customDataTypeFor(descriptor: Descriptor): Option[DataType] =
+    messageEncoders.get(descriptor) match {
+      case Some(encoder) => Some(encoder.catalystRepr)
+      case None =>
+        if (retainPrimitiveWrappers) {
+          None
+        } else {
+          SchemaOptions.PrimitiveWrapperTypes.get(descriptor)
+        }
+    }
 
   private[scalapb] def isUnpackedPrimitiveWrapper(message: Descriptor) =
     !retainPrimitiveWrappers && SchemaOptions.PrimitiveWrapperTypes.contains(message)
@@ -34,7 +46,7 @@ case class SchemaOptions(
 
 object SchemaOptions {
   val Default =
-    SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, catalystMappers = Map())
+    SchemaOptions(ColumnNaming.ProtoNames, retainPrimitiveWrappers = false, messageEncoders = Map())
 
   def apply(): SchemaOptions = Default
 
