@@ -46,8 +46,8 @@ class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll
       Seq(
         IntegerType,
         StringType,
-        ArrayType(IntegerType, false),
-        ArrayType(StringType, false)
+        ArrayType(IntegerType, true),
+        ArrayType(StringType, true)
       )
     )
     df.collect() must contain theSameElementsAs (
@@ -67,11 +67,11 @@ class SchemaOptionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll
         StructType(Seq(StructField("value", StringType, true))),
         ArrayType(
           StructType(Seq(StructField("value", IntegerType, true))),
-          false
+          true
         ),
         ArrayType(
           StructType(Seq(StructField("value", StringType, true))),
-          false
+          true
         )
       )
     )

@@ -150,4 +150,6 @@ object JavaHelpers {
   def vectorFromPValue(p: PValue): Vector[PValue] = {
     p.asInstanceOf[PRepeated].value
   }
+
+  def toPMessageAsPValue(g: GeneratedMessage): PValue = g.toPMessage
 }

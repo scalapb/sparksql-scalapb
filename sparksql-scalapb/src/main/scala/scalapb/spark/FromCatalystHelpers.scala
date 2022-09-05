@@ -1,7 +1,7 @@
 package scalapb.spark
 
 import com.google.protobuf.ByteString
-import org.apache.spark.sql.catalyst.analysis.{UnresolvedAttribute, UnresolvedExtractValue}
+import org.apache.spark.sql.catalyst.analysis.{UnresolvedExtractValue}
 import org.apache.spark.sql.catalyst.expressions
 import org.apache.spark.sql.catalyst.expressions.objects.{
   Invoke,
@@ -9,24 +9,14 @@ import org.apache.spark.sql.catalyst.expressions.objects.{
   NewInstance,
   StaticInvoke
 }
-import org.apache.spark.sql.catalyst.expressions.{
-  BoundReference,
-  CreateArray,
-  Expression,
-  If,
-  IsNull,
-  Literal
-}
-import org.apache.spark.sql.types.ObjectType
+import org.apache.spark.sql.catalyst.expressions.{CreateArray, Expression, If, IsNull, Literal}
+import org.apache.spark.sql.types.{MapType, ObjectType}
 import scalapb.GeneratedMessageCompanion
 import scalapb.descriptors._
 import org.apache.spark.sql.catalyst.expressions.objects.CatalystToExternalMap
-import org.apache.spark.sql.types.MapType
 import org.apache.spark.sql.catalyst.expressions.objects.LambdaVariable
-import org.apache.spark.sql.catalyst.expressions.UnaryExpression
-import org.apache.spark.sql.catalyst.expressions.Unevaluable
-import org.apache.spark.sql.types.DataType
-import org.apache.spark.sql.catalyst.expressions.objects.UnresolvedCatalystToExternalMap
+
+import scala.collection.immutable
 
 trait FromCatalystHelpers {
   def protoSql: ProtoSQL
@@ -37,17 +27,37 @@ trait FromCatalystHelpers {
       cmp: GeneratedMessageCompanion[_],
       input: Expression
   ): Expression = {
-    val args =
-      if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor))
-        cmp.scalaDescriptor.fields.map { fd =>
-          fieldFromCatalyst(cmp, fd, input)
+    schemaOptions.messageEncoders.get(cmp.scalaDescriptor) match {
+      case Some(encoder) =>
+        StaticInvoke(
+          JavaHelpers.getClass,
+          ObjectType(classOf[PValue]),
+          "toPMessageAsPValue",
+          encoder.fromCatalyst(input) :: Nil
+        )
+      case None =>
+        val args: immutable.Seq[Expression] = {
+          if (schemaOptions.isUnpackedPrimitiveWrapper(cmp.scalaDescriptor)) {
+            cmp.scalaDescriptor.fields.map { fd =>
+              fieldFromCatalyst(cmp, fd, input)
+            }
+          } else {
+            val expressions: immutable.Seq[Expression] = cmp.scalaDescriptor.fields.map { fd =>
+              val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
+              fieldFromCatalyst(cmp, fd, newPath)
+            }
+            expressions
+          }
         }
-      else {
-        cmp.scalaDescriptor.fields.map { fd =>
-          val newPath = addToPath(input, schemaOptions.columnNaming.fieldName(fd))
-          fieldFromCatalyst(cmp, fd, newPath)
-        }
-      }
+        pmessageFromCatalyst(input, cmp, args)
+    }
+  }
+
+  def pmessageFromCatalyst(
+      input: Expression,
+      cmp: GeneratedMessageCompanion[_],
+      args: Seq[Expression]
+  ): Expression = {
     val outputType = ObjectType(classOf[PValue])
     val mapArgs =
       StaticInvoke(
