@@ -19,7 +19,7 @@ class ExtensionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     val data = Seq(
       Baz(id = Some(1)),
       Baz(id = Some(2)),
-      Baz(id = Some(3)),
+      Baz(id = Some(3))
     )
 
     val binaryDS = spark.createDataset(data.map(_.toByteArray))
