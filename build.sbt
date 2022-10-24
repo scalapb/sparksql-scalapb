@@ -110,17 +110,23 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark32, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    _.settings(
+      Test / testOptions += Tests.Filter(_ != "scalapb.spark.ExtensionsSpec")
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212),
     axisValues = Seq(Spark31, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    _.settings(
+      Test / testOptions += Tests.Filter(_ != "scalapb.spark.ExtensionsSpec")
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212),
     axisValues = Seq(Spark30, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    _.settings(
+      Test / testOptions += Tests.Filter(_ != "scalapb.spark.ExtensionsSpec")
+    )
   )
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
