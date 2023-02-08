@@ -18,7 +18,7 @@ lazy val Spark31 = Spark("3.1.3")
 
 lazy val Spark30 = Spark("3.0.3")
 
-lazy val ScalaPB0_11 = ScalaPB("0.11.12")
+lazy val ScalaPB0_11 = ScalaPB("0.11.13")
 
 lazy val ScalaPB0_10 = ScalaPB("0.10.11")
 
