@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+option java_package = "com.example.protos";
+
+message Foo {
+  optional string name = 1;
+
+  extensions 100 to 199;
+}
+
+message Baz {
+  extend Foo {
+    optional int32 bar = 126;
+  }
+
+  optional int32 id = 1;
+}
