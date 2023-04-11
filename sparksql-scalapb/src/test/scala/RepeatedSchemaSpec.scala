@@ -12,6 +12,8 @@ import scalapb.spark.schema.bug.schema_bug.{
   RepeatedOmitWrite,
   Write
 }
+
+// See https://github.com/scalapb/sparksql-scalapb/issues/313
 class RepeatedSchemaSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   val spark: SparkSession = SparkSession
     .builder()
