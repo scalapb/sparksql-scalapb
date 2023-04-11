@@ -4,8 +4,6 @@ import org.apache.spark.sql.types._
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 import scalapb.descriptors.{Descriptor, FieldDescriptor}
 import frameless.TypedEncoder
-import org.apache.spark.sql.catalyst.plans.logical.Generate
-import scala.util.control
 
 case class SchemaOptions(
     columnNaming: ColumnNaming,

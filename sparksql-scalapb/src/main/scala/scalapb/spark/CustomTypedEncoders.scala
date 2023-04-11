@@ -1,8 +1,7 @@
 package scalapb.spark
 
 import com.google.protobuf.timestamp.Timestamp
-import frameless.{SQLDate, SQLTimestamp}
-import scalapb.descriptors._
+import frameless.SQLTimestamp
 
 import frameless.Injection
 import frameless.TypedEncoder

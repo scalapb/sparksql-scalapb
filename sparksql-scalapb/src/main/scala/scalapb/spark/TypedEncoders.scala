@@ -7,16 +7,9 @@ import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
 import org.apache.spark.sql.catalyst.expressions.{Expression, If, IsNull, Literal}
 import org.apache.spark.sql.types._
 import scalapb._
-import scalapb.descriptors.{PValue, Reads}
+import scalapb.descriptors.Reads
 
 import scala.reflect.ClassTag
-import org.apache.spark.sql.catalyst.expressions.CreateNamedStruct
-import org.apache.spark.sql.catalyst.expressions.BoundReference
-import org.apache.spark.unsafe.types.UTF8String
-import org.apache.spark.sql.catalyst.WalkedTypePath
-import org.apache.spark.sql.catalyst.expressions.objects.NewInstance
-import scalapb.descriptors.PMessage
-import org.apache.spark.sql.catalyst.expressions.CreateArray
 
 trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Serializable {
   class MessageTypedEncoder[T <: GeneratedMessage](implicit

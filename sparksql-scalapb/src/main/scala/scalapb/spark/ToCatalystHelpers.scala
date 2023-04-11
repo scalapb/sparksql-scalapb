@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{
   IsNull,
   Literal
 }
-import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType, TimestampType}
+import org.apache.spark.sql.types.{BooleanType, IntegerType, ObjectType}
 import scalapb.descriptors.{Descriptor, FieldDescriptor, PValue, ScalaType}
 import scalapb.GeneratedMessageCompanion
 import org.apache.spark.sql.catalyst.expressions.objects.ExternalMapToCatalyst

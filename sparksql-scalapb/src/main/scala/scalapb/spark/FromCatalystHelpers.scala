@@ -1,11 +1,11 @@
 package scalapb.spark
 
 import com.google.protobuf.ByteString
-import org.apache.spark.sql.catalyst.analysis.{UnresolvedExtractValue}
+import org.apache.spark.sql.catalyst.analysis.UnresolvedExtractValue
 import org.apache.spark.sql.catalyst.expressions
 import org.apache.spark.sql.catalyst.expressions.objects.{
   Invoke,
-  MapObjects,
+  UnresolvedMapObjects,
   NewInstance,
   StaticInvoke
 }
@@ -79,10 +79,9 @@ trait FromCatalystHelpers {
       input: Expression
   ): Expression = {
     if (fd.isRepeated && !fd.isMapField) {
-      val objs = MapObjects(
+      val objs = UnresolvedMapObjects(
         (input: Expression) => singleFieldValueFromCatalyst(cmp, fd, input),
-        input,
-        protoSql.singularDataType(fd)
+        input
       )
       StaticInvoke(
         JavaHelpers.getClass,
