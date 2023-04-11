@@ -1,6 +1,5 @@
 package scalapb.spark
 
-import com.google.protobuf.timestamp.Timestamp.toJavaProto
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.types._
 import org.scalatest.BeforeAndAfterAll

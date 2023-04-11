@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package scalapb.spark.schema.bug;
+
+message Write {
+  repeated RepeatedNestedWrite nested_field = 6;
+  string additional_field = 14;
+}
+
+message RepeatedNestedWrite {
+  RepeatedOmitWrite omit_for_read = 2;
+  string field_one = 7;
+  string field_two = 8;
+  Nested persisted = 9;
+}
+
+message RepeatedOmitWrite {
+  string field_one = 5;
+  string field_two = 6;
+}
+
+message Nested {
+  string field_one = 5;
+}
+
+message Read {
+  repeated RepeatedNestedRead nested_field = 6;
+  string additional_field = 14;
+}
+
+message RepeatedNestedRead {
+  string field_one = 7;
+  string field_two = 8;
+  Nested persisted = 9;
+}

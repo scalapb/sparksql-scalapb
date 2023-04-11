@@ -2,8 +2,6 @@ package scalapb.spark
 
 import com.example.protos.wrappers._
 import org.apache.spark.sql.SparkSession
-import org.apache.hadoop.io.ArrayPrimitiveWritable
-import scalapb.GeneratedMessageCompanion
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.types.ArrayType
 import org.apache.spark.sql.types.StructField

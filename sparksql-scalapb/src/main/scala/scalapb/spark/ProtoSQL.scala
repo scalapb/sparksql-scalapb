@@ -1,19 +1,12 @@
 package scalapb.spark
 
-import com.google.protobuf.timestamp.Timestamp
-import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.catalyst.expressions.AttributeReference
-import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
-import org.apache.spark.sql.catalyst.util.{ArrayBasedMapData, GenericArrayData}
+import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.ExternalRDD
 import org.apache.spark.sql.types._
 import org.apache.spark.sql._
-import org.apache.spark.unsafe.types.UTF8String
 import scalapb.descriptors._
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 import scala.reflect.ClassTag
-import frameless.TypedEncoder
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
   self =>

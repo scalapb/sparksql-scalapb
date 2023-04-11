@@ -1,6 +1,5 @@
 package scalapb.spark
 
-import scalapb.descriptors.{PInt, PLong, PValue}
 import com.google.protobuf.timestamp.Timestamp
 
 // TODO(nadav): Consider adding functions like this to ScalaPB core.  Note that protobuf-java-util
