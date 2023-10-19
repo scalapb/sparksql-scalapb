@@ -110,7 +110,8 @@ trait Implicits {
       ct: ClassTag[T]
   ): TypedEncoder[T] = new typedEncoders.EnumTypedEncoder[T]
 
-  implicit def byteStringTypedEncoder = typedEncoders.ByteStringTypedEncoder
+  implicit def byteStringTypedEncoder: TypedEncoder[ByteString] =
+    typedEncoders.ByteStringTypedEncoder
 
   implicit def typedEncoderToEncoder[T: ClassTag](implicit
       ev: TypedEncoder[T]
