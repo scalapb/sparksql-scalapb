@@ -21,7 +21,7 @@ jobs:
         key: ${{ runner.os }}-sbt-${{ hashFiles('**/*.sbt') }}
     - name: Compile and test
       run: |
-       sbt test
+       sbt -J-Xmx2G test
       shell: bash
     - name: Format check
       run: |
