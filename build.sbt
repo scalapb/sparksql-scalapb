@@ -90,7 +90,8 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     Test / PB.targets := Seq(
       scalapbPlugin(scalapb.value.scalapbVersion) -> (Test / sourceManaged).value
     ),
-    Test / run / fork := true
+    Test / run / fork := true,
+    Test / javaOptions ++= Seq("-Xmx2G"),
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
