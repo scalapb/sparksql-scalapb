@@ -1,6 +1,6 @@
 ThisBuild / organization := "com.thesamet.scalapb"
 
-ThisBuild / scalacOptions ++= Seq("-deprecation", "-target:jvm-1.8")
+ThisBuild / scalacOptions ++= Seq("-deprecation", "-release:8")
 
 ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
