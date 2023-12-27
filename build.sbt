@@ -28,7 +28,7 @@ lazy val ScalaPB0_10 = ScalaPB("0.10.11")
 
 lazy val framelessDatasetName = settingKey[String]("frameless-dataset-name")
 
-lazy val frameLessDatasetVersion = settingKey[String]("frameless-dataset-version")
+lazy val framelessDatasetVersion = settingKey[String]("frameless-dataset-version")
 
 lazy val spark = settingKey[Spark]("spark")
 
@@ -50,7 +50,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   .defaultAxes()
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% framelessDatasetName.value % frameLessDatasetVersion.value,
+      "org.typelevel" %% framelessDatasetName.value % framelessDatasetVersion.value,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
@@ -89,7 +89,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
         case _       => ???
       }
     },
-    frameLessDatasetVersion := {
+    framelessDatasetVersion := {
       spark.value match {
         case Spark35 | Spark34 | Spark33 => "0.16.0"
         case Spark32 => "0.15.0"  // Spark3.2 support dropped in ver > 0.15.0
