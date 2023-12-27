@@ -12,6 +12,10 @@ val Scala212 = "2.12.18"
 
 val Scala213 = "2.13.12"
 
+lazy val Spark35 = Spark("3.5.0")
+
+lazy val Spark34 = Spark("3.4.2")
+
 lazy val Spark33 = Spark("3.3.3")
 
 lazy val Spark32 = Spark("3.2.3")
@@ -77,7 +81,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     },
     framelessDatasetName := {
       spark.value match {
-        case Spark33 => "frameless-dataset"
+        case Spark35 | Spark34 | Spark33 => "frameless-dataset"
         case Spark32 => "frameless-dataset-spark32"
         case Spark31 => "frameless-dataset-spark31"
         case _       => ???
@@ -92,6 +96,16 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     ),
     Test / run / fork := true,
     Test / javaOptions ++= Seq("-Xmx2G")
+  )
+  .customRow(
+    scalaVersions = Seq(Scala212, Scala213),
+    axisValues = Seq(Spark35, ScalaPB0_11, VirtualAxis.jvm),
+    settings = Seq()
+  )
+  .customRow(
+    scalaVersions = Seq(Scala212, Scala213),
+    axisValues = Seq(Spark34, ScalaPB0_11, VirtualAxis.jvm),
+    settings = Seq()
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
