@@ -1,3 +1,7 @@
+## 1.0.4
+
+* Add support for Spark 3.4.x and Spark 3.5.x
+
 ## 1.0.2
 
 * Add support for Spark 3.3.x, remove support for Spark 3.0.x
@@ -15,4 +19,3 @@
 ### Breaking changes
 * Protobuf maps are now represented as Spark in maps. Prior to this change
   maps were represented as a list of key-value structs. (#79)
-
