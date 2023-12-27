@@ -84,17 +84,17 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     framelessDatasetName := {
       spark.value match {
         case Spark35 | Spark34 | Spark33 => "frameless-dataset"
-        case Spark32 => "frameless-dataset-spark32"
-        case Spark31 => "frameless-dataset-spark31"
-        case _       => ???
+        case Spark32                     => "frameless-dataset-spark32"
+        case Spark31                     => "frameless-dataset-spark31"
+        case _                           => ???
       }
     },
     framelessDatasetVersion := {
       spark.value match {
-        case Spark35 | Spark34 | Spark33 => "0.16.0"
-        case Spark32 => "0.15.0"  // Spark3.2 support dropped in ver > 0.15.0
-        case Spark31 => "0.14.0"  // Spark3.1 support dropped in ver > 0.14.0
-        case _       => ???
+        case Spark35 | Spark34 | Spark33 => "0.16.0" // NPE in 3.4, 3.5 if older lib versions used
+        case Spark32                     => "0.15.0" // Spark3.2 support dropped in ver > 0.15.0
+        case Spark31                     => "0.14.0" // Spark3.1 support dropped in ver > 0.14.0
+        case _                           => ???
       }
     },
     name := s"sparksql${spark.value.majorVersion}${spark.value.minorVersion}-${scalapb.value.idSuffix}",
