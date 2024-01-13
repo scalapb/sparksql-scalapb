@@ -16,7 +16,7 @@ lazy val Spark35 = Spark("3.5.0")
 
 lazy val Spark34 = Spark("3.4.2")
 
-lazy val Spark33 = Spark("3.3.3")
+lazy val Spark33 = Spark("3.3.4")
 
 lazy val Spark32 = Spark("3.2.3")
 
