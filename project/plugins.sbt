@@ -8,4 +8,4 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.10.0")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
 
-addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.1")
+addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.2")
