@@ -56,7 +56,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "test",
       "org.scalatest" %% "scalatest" % "3.2.18" % "test",
-      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.17.0" % "test",
+      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % "test",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.16" % "1.3.1" % "test"
     ),
     spark := {
