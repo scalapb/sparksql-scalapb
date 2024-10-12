@@ -4,7 +4,7 @@ addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.7.0")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.7")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.11.3")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.12.2")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
 
