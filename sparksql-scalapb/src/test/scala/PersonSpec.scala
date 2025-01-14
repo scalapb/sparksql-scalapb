@@ -310,7 +310,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   }
 
   "UDFs that returns protos" should "work when reading local files" in {
-    val df = spark.read.json("./sparksql-scalapb/src/test/assets/address.json")
+    val df = spark.read.json(getClass.getResource("/address.json").toURI.toString)
 
     val returnAddress = ProtoSQL.udf { s: String => Address() }
 
@@ -349,7 +349,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   "parsing null repeated from json" should "work" in {
     spark.read
       .schema(ProtoSQL.schemaFor[Person].asInstanceOf[types.StructType])
-      .json("./sparksql-scalapb/src/test/assets/person_null_repeated.json")
+      .json(getClass.getResource("/person_null_repeated.json").toURI.toString)
       .as[Person]
       .collect() must contain theSameElementsAs Seq(
       Person().withTags(Seq("foo", "bar")),
