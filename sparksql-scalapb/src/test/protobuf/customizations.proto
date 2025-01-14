@@ -22,3 +22,7 @@ message BothTimestampTypes {
   google.protobuf.Timestamp google_ts = 1;
   google.protobuf.Timestamp google_ts_as_sql_ts = 2 [(scalapb.field).type = "java.sql.Timestamp"];
 }
+
+message TimestampTypesMap {
+  map<string, SQLTimestampFromGoogleTimestamp> map_field = 1;
+}
