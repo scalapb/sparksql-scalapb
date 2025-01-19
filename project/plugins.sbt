@@ -6,6 +6,6 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.7")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.12.2")
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.4")
 
 addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.10.1")
