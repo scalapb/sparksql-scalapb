@@ -8,7 +8,8 @@ import org.scalatest.matchers.must.Matchers
 import scalapb.spark.test3.customizations.{
   BothTimestampTypes,
   SQLTimestampFromGoogleTimestamp,
-  StructFromGoogleTimestamp
+  StructFromGoogleTimestamp,
+  TimestampTypesMap
 }
 
 import java.sql.{Timestamp => SQLTimestamp}
@@ -155,6 +156,21 @@ class TimestampSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     dsMapped.collect() must contain theSameElementsAs Seq(
       SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision)),
       SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision))
+    )
+  }
+
+  "spark.createDataset from proto messages with spark timestamp in map" should "be able to convert items with correct timestamp values" in {
+    import ProtoSQL.withSparkTimestamps.implicits._
+
+    val value = TimestampTypesMap(mapField =
+      Map(
+        "a" -> SQLTimestampFromGoogleTimestamp(googleTsAsSqlTs = Some(sqlTimestampMicrosPrecision))
+      )
+    )
+    val ds: Dataset[TimestampTypesMap] = spark.createDataset(Seq(value))
+
+    ds.collect() must contain theSameElementsAs Seq(
+      value
     )
   }
 

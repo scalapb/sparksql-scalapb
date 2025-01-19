@@ -97,7 +97,7 @@ trait FromCatalystHelpers {
         input,
         (in: Expression) => singleFieldValueFromCatalyst(mapEntryCmp, keyDesc, in),
         (in: Expression) => singleFieldValueFromCatalyst(mapEntryCmp, valDesc, in),
-        ProtoSQL.dataTypeFor(fd).asInstanceOf[MapType],
+        protoSql.dataTypeFor(fd).asInstanceOf[MapType],
         classOf[Vector[(Any, Any)]]
       )
       val objs = MyCatalystToExternalMap(urobjs)
