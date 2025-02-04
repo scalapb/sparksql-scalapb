@@ -8,7 +8,7 @@ import frameless.TypedEncoder
 case class SchemaOptions(
     columnNaming: ColumnNaming,
     retainPrimitiveWrappers: Boolean,
-    messageEncoders: Map[Descriptor, TypedEncoder[_]]
+    messageEncoders: Map[Descriptor, TypedEncoder[?]]
 ) {
   def withScalaNames = copy(columnNaming = ColumnNaming.ScalaNames)
 
@@ -16,7 +16,7 @@ case class SchemaOptions(
 
   def withRetainedPrimitiveWrappers = copy(retainPrimitiveWrappers = true)
 
-  def withMessageEncoders(messageEncoders: Map[Descriptor, TypedEncoder[_]]) =
+  def withMessageEncoders(messageEncoders: Map[Descriptor, TypedEncoder[?]]) =
     copy(messageEncoders = messageEncoders)
 
   def addMessageEncoder[T <: GeneratedMessage](

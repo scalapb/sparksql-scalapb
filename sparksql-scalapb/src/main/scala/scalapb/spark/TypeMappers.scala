@@ -9,9 +9,9 @@ import java.time.Instant
 object TypeMappers {
 
   implicit val googleTsToSqlTsMapper: TypeMapper[GoogleTimestamp, SQLTimestamp] =
-    TypeMapper({ googleTs: GoogleTimestamp =>
+    TypeMapper({ (googleTs: GoogleTimestamp) =>
       SQLTimestamp.from(Instant.ofEpochSecond(googleTs.seconds, googleTs.nanos))
-    })({ sqlTs: SQLTimestamp =>
+    })({ (sqlTs: SQLTimestamp) =>
       val instant = sqlTs.toInstant
       GoogleTimestamp(instant.getEpochSecond, instant.getNano)
     })

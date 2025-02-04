@@ -12,8 +12,8 @@ object CustomTypedEncoders {
   val timestampToSqlTimestamp: TypedEncoder[Timestamp] =
     fromInjection(
       Injection[Timestamp, SQLTimestamp](
-        { ts: Timestamp => SQLTimestamp(TimestampHelpers.toMicros(ts)) },
-        { timestamp: SQLTimestamp => TimestampHelpers.fromMicros(timestamp.us) }
+        { (ts: Timestamp) => SQLTimestamp(TimestampHelpers.toMicros(ts)) },
+        { (timestamp: SQLTimestamp) => TimestampHelpers.fromMicros(timestamp.us) }
       )
     )
 

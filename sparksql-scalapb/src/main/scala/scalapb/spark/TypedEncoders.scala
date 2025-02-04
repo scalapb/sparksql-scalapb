@@ -28,11 +28,11 @@ trait TypedEncoders extends FromCatalystHelpers with ToCatalystHelpers with Seri
       val reads = Invoke(
         Literal.fromObject(cmp),
         "messageReads",
-        ObjectType(classOf[Reads[_]]),
+        ObjectType(classOf[Reads[?]]),
         Nil
       )
 
-      val read = Invoke(reads, "read", ObjectType(classOf[Function[_, _]]))
+      val read = Invoke(reads, "read", ObjectType(classOf[Function[?, ?]]))
 
       val ret = Invoke(read, "apply", ObjectType(ct.runtimeClass), expr :: Nil)
       ret

@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-option java_package = "com.example.protos";
-
-message MapTest {
-    map<string,string> attributes = 16;
-}

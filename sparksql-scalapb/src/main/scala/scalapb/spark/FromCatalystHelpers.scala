@@ -24,7 +24,7 @@ trait FromCatalystHelpers {
   def schemaOptions: SchemaOptions = protoSql.schemaOptions
 
   def pmessageFromCatalyst(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       input: Expression
   ): Expression = {
     schemaOptions.messageEncoders.get(cmp.scalaDescriptor) match {
@@ -55,7 +55,7 @@ trait FromCatalystHelpers {
 
   def pmessageFromCatalyst(
       input: Expression,
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       args: Seq[Expression]
   ): Expression = {
     val outputType = ObjectType(classOf[PValue])
@@ -74,7 +74,7 @@ trait FromCatalystHelpers {
   }
 
   def fieldFromCatalyst(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       fd: FieldDescriptor,
       input: Expression
   ): Expression = {
@@ -118,7 +118,7 @@ trait FromCatalystHelpers {
   }
 
   def singleFieldValueFromCatalyst(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       fd: FieldDescriptor,
       input: Expression
   ): Expression = {
@@ -182,7 +182,7 @@ case class MyUnresolvedCatalystToExternalMap(
     @transient keyFunction: Expression => Expression,
     @transient valueFunction: Expression => Expression,
     mapType: MapType,
-    collClass: Class[_]
+    collClass: Class[?]
 )
 
 object MyCatalystToExternalMap {

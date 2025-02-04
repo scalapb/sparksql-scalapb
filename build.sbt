@@ -4,27 +4,17 @@ ThisBuild / scalacOptions ++= Seq("-deprecation", "-release:8")
 
 ThisBuild / javacOptions ++= List("-target", "8", "-source", "8")
 
+ThisBuild / version := "0.0.1"
+
 Global / concurrentRestrictions := Seq(
   Tags.limit(Tags.Test, 1)
 )
 
-val Scala212 = "2.12.20"
-
-val Scala213 = "2.13.16"
-
-lazy val Spark35 = Spark("3.5.3")
-
-lazy val Spark34 = Spark("3.4.4")
-
-lazy val Spark33 = Spark("3.3.4")
+val Scala3 = "3.6.3"
 
 lazy val Spark32 = Spark("3.2.3")
 
-lazy val Spark31 = Spark("3.1.3")
-
 lazy val ScalaPB0_11 = ScalaPB("0.11.17")
-
-lazy val ScalaPB0_10 = ScalaPB("0.10.11")
 
 lazy val framelessDatasetName = settingKey[String]("frameless-dataset-name")
 
@@ -50,14 +40,11 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
   .defaultAxes()
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% framelessDatasetName.value % framelessDatasetVersion.value,
+      "org.typelevel" %% framelessDatasetName.value % framelessDatasetVersion.value cross CrossVersion.for3Use2_13,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion,
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
-      "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
-      "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "test",
-      "org.scalatest" %% "scalatest" % "3.2.19" % "test",
-      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.18.0" % "test",
-      "com.github.alexarchambault" %% "scalacheck-shapeless_1.16" % "1.3.1" % "test"
+      "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided" cross CrossVersion.for3Use2_13,
+      "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "test" cross CrossVersion.for3Use2_13
     ),
     spark := {
       virtualAxes.value
@@ -83,18 +70,18 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     },
     framelessDatasetName := {
       spark.value match {
-        case Spark35 | Spark34 | Spark33 => "frameless-dataset"
-        case Spark32                     => "frameless-dataset-spark32"
-        case Spark31                     => "frameless-dataset-spark31"
-        case _                           => ???
+//        case Spark35 | Spark34 | Spark33 => "frameless-dataset"
+        case Spark32 => "frameless-dataset-spark32"
+//        case Spark31                     => "frameless-dataset-spark31"
+        case _ => ???
       }
     },
     framelessDatasetVersion := {
       spark.value match {
-        case Spark35 | Spark34 | Spark33 => "0.16.0" // NPE in 3.4, 3.5 if older lib versions used
-        case Spark32                     => "0.15.0" // Spark3.2 support dropped in ver > 0.15.0
-        case Spark31                     => "0.14.0" // Spark3.1 support dropped in ver > 0.14.0
-        case _                           => ???
+//        case Spark35 | Spark34 | Spark33 => "0.16.0" // NPE in 3.4, 3.5 if older lib versions used
+        case Spark32 => "0.15.0" // Spark3.2 support dropped in ver > 0.15.0
+//        case Spark31                     => "0.14.0" // Spark3.1 support dropped in ver > 0.14.0
+        case _ => ???
       }
     },
     name := s"sparksql${spark.value.majorVersion}${spark.value.minorVersion}-${scalapb.value.idSuffix}",
@@ -107,46 +94,46 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     Test / run / fork := true,
     Test / javaOptions ++= Seq("-Xmx2G")
   )
+//  .customRow(
+//    scalaVersions = Seq(Scala212, Scala213),
+//    axisValues = Seq(Spark35, ScalaPB0_11, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212, Scala213),
+//    axisValues = Seq(Spark34, ScalaPB0_11, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212, Scala213),
+//    axisValues = Seq(Spark33, ScalaPB0_11, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
   .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
-    axisValues = Seq(Spark35, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
-    axisValues = Seq(Spark34, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
-    axisValues = Seq(Spark33, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
+    scalaVersions = Seq(Scala3),
     axisValues = Seq(Spark32, ScalaPB0_11, VirtualAxis.jvm),
     settings = Seq()
   )
-  .customRow(
-    scalaVersions = Seq(Scala212),
-    axisValues = Seq(Spark31, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
-    axisValues = Seq(Spark33, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212, Scala213),
-    axisValues = Seq(Spark32, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
-  )
-  .customRow(
-    scalaVersions = Seq(Scala212),
-    axisValues = Seq(Spark31, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
-  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212),
+//    axisValues = Seq(Spark31, ScalaPB0_11, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212, Scala213),
+//    axisValues = Seq(Spark33, ScalaPB0_10, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212, Scala213),
+//    axisValues = Seq(Spark32, ScalaPB0_10, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
+//  .customRow(
+//    scalaVersions = Seq(Scala212),
+//    axisValues = Seq(Spark31, ScalaPB0_10, VirtualAxis.jvm),
+//    settings = Seq()
+//  )
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
 

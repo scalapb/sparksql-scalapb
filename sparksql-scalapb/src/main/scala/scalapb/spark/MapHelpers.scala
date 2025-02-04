@@ -1,4 +1,4 @@
-package scalapb.spark.internal
+package scalapb.spark
 
 private[spark] object MapHelpers {
   def fromIterator[K, V](it: => Iterator[(K, V)]): Map[K, V] = new Map[K, V] {

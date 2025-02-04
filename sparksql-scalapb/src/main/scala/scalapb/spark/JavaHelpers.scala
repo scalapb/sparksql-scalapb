@@ -7,7 +7,7 @@ import scalapb.{GeneratedEnum, GeneratedEnumCompanion, GeneratedMessage, Generat
 
 object JavaHelpers {
   def enumToString(
-      cmp: GeneratedEnumCompanion[_],
+      cmp: GeneratedEnumCompanion[?],
       value: GeneratedEnum
   ): UTF8String = {
     UTF8String.fromString(
@@ -52,7 +52,7 @@ object JavaHelpers {
   }
 
   def penumFromString(
-      cmp: GeneratedEnumCompanion[_],
+      cmp: GeneratedEnumCompanion[?],
       inputUtf8: UTF8String
   ): PValue = {
     val input = inputUtf8.toString
@@ -73,7 +73,7 @@ object JavaHelpers {
     }
   }
 
-  def mkMap(cmp: GeneratedMessageCompanion[_], args: ArrayData): Map[FieldDescriptor, PValue] = {
+  def mkMap(cmp: GeneratedMessageCompanion[?], args: ArrayData): Map[FieldDescriptor, PValue] = {
     cmp.scalaDescriptor.fields
       .zip(args.array)
       .filter {
@@ -89,7 +89,7 @@ object JavaHelpers {
   }
 
   def mkPRepeatedMap(
-      mapEntryCmp: GeneratedMessageCompanion[_],
+      mapEntryCmp: GeneratedMessageCompanion[?],
       args: Vector[(PValue, PValue)]
   ): PValue = {
     val keyDesc = mapEntryCmp.scalaDescriptor.findFieldByNumber(1).get
@@ -102,7 +102,7 @@ object JavaHelpers {
   // ExternalMapToCatalyst only needs iterator. We create this view into s to
   // avoid making a copy.
   def mkMap(s: Seq[GeneratedMessage]): Map[Any, Any] =
-    scalapb.spark.internal.MapHelpers.fromIterator {
+    MapHelpers.fromIterator {
       if (s.isEmpty) Iterator.empty
       else {
         val cmp = s.head.companion

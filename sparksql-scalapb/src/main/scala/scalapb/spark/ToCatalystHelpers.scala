@@ -20,7 +20,7 @@ trait ToCatalystHelpers {
   def schemaOptions: SchemaOptions
 
   def messageToCatalyst(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       input: Expression
   ): Expression = {
     schemaOptions.messageEncoders.get(cmp.scalaDescriptor) match {
@@ -52,7 +52,7 @@ trait ToCatalystHelpers {
   }
 
   def fieldGetterAndTransformer(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       fd: FieldDescriptor
   ): (Expression => Expression, Expression => Expression) = {
     def messageFieldCompanion = cmp.messageCompanionForFieldNumber(fd.number)
@@ -73,7 +73,7 @@ trait ToCatalystHelpers {
               Nil
             ),
             "findFieldByNumber",
-            ObjectType(classOf[Option[_]]),
+            ObjectType(classOf[Option[?]]),
             Literal(fd.number) :: Nil
           ),
           "get",
@@ -86,18 +86,18 @@ trait ToCatalystHelpers {
         inputObject,
         "getFieldByNumber",
         if (fd.isRepeated)
-          ObjectType(classOf[Seq[_]])
+          ObjectType(classOf[Seq[?]])
         else
           ObjectType(messageFieldCompanion.defaultInstance.getClass),
         Literal(fd.number, IntegerType) :: Nil
       )
 
     if (!isMessage) {
-      (getField, { e: Expression => singularFieldToCatalyst(fd, e) })
+      (getField, { (e: Expression) => singularFieldToCatalyst(fd, e) })
     } else {
       (
         getFieldByNumber,
-        { e: Expression =>
+        { (e: Expression) =>
           messageToCatalyst(messageFieldCompanion, e)
         }
       )
@@ -105,7 +105,7 @@ trait ToCatalystHelpers {
   }
 
   def fieldToCatalyst(
-      cmp: GeneratedMessageCompanion[_],
+      cmp: GeneratedMessageCompanion[?],
       fd: FieldDescriptor,
       inputObject: Expression
   ): Expression = {
@@ -132,7 +132,7 @@ trait ToCatalystHelpers {
         ExternalMapToCatalyst(
           StaticInvoke(
             JavaHelpers.getClass,
-            ObjectType(classOf[Map[_, _]]),
+            ObjectType(classOf[Map[?, ?]]),
             "mkMap",
             fieldGetter(inputObject) :: Nil
           ),
@@ -152,7 +152,7 @@ trait ToCatalystHelpers {
       else {
         val getter = StaticInvoke(
           JavaHelpers.getClass,
-          ObjectType(classOf[Vector[_]]),
+          ObjectType(classOf[Vector[?]]),
           "vectorFromPValue",
           fieldGetter(inputObject) :: Nil
         )
