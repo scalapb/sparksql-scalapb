@@ -30,7 +30,7 @@ case class SchemaOptions(
   private[scalapb] def customDataTypeFor(descriptor: Descriptor): Option[DataType] =
     messageEncoders.get(descriptor) match {
       case Some(encoder) => Some(encoder.catalystRepr)
-      case None =>
+      case None          =>
         if (retainPrimitiveWrappers) {
           None
         } else {
