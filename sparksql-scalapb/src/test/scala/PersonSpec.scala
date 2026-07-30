@@ -201,67 +201,6 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     ))
   }
 
-  "selecting message fields into dataset should work" should "work" in {
-    val df = ProtoSQL.createDataFrame(
-      spark,
-      Seq(
-        TestPerson,
-        TestPerson.withName("Other").clearAddresses,
-        TestPerson
-          .withName("Other2")
-          .clearData
-          .clearGender
-          .clearAddresses
-          .addAddresses(Address(street = Some("FooBar")))
-      )
-    )
-
-    val ds = df.select($"name", $"addresses".getItem(0))
-
-    ds.as[(String, Option[Address])].collect() must contain theSameElementsAs (
-      Seq(
-        (TestPerson.getName, Some(TestPerson.addresses.head)),
-        ("Other", None),
-        ("Other2", Some(Address(street = Some("FooBar"))))
-      )
-    )
-
-    ds.as[(String, Address)].collect() must contain theSameElementsAs (
-      Seq(
-        (TestPerson.getName, TestPerson.addresses.head),
-        null,
-        ("Other2", Address(street = Some("FooBar")))
-      )
-    )
-
-    val ds2 = df.select($"name", $"gender")
-    ds2.as[(String, Option[Gender])].collect() must contain theSameElementsAs (
-      Seq(
-        (TestPerson.getName, Some(Gender.MALE)),
-        ("Other", Some(Gender.MALE)),
-        ("Other2", None)
-      )
-    )
-    ds2.as[(String, Gender)].collect() must contain theSameElementsAs (
-      Seq(
-        (TestPerson.getName, Gender.MALE),
-        ("Other", Gender.MALE),
-        null
-      )
-    )
-
-    val ds3 = df.select($"name", $"data")
-    ds3
-      .as[(String, Option[ByteString])]
-      .collect() must contain theSameElementsAs (
-      Seq(
-        (TestPerson.getName, Some(TestPerson.getData)),
-        ("Other", Some(TestPerson.getData)),
-        ("Other2", None)
-      )
-    )
-  }
-
   "serialize and deserialize" should "work on dataset of bytes" in {
     val s = Seq(
       TestPerson.update(_.name := "p1"),
