@@ -1,11 +1,12 @@
 package scalapb.spark
 
+import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.execution.ExternalRDD
 import org.apache.spark.sql.types._
-import org.apache.spark.sql._
 import scalapb.descriptors._
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
+
 import scala.reflect.ClassTag
 
 class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
@@ -16,8 +17,7 @@ class ProtoSQL(val schemaOptions: SchemaOptions) extends Udfs {
       sparkSession: SparkSession,
       protoRdd: org.apache.spark.rdd.RDD[T]
   ): DataFrame = {
-    val logicalPlan: LogicalPlan = ExternalRDD(protoRdd, sparkSession)
-    FramelessInternals.ofRows(sparkSession, logicalPlan)
+    SparkCompatibilityHelpers.protoToDataFrame(sparkSession, protoRdd)
   }
 
   def protoToDataFrame[T <: GeneratedMessage: Encoder](

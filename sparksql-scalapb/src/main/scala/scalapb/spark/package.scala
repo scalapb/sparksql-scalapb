@@ -2,8 +2,6 @@ package scalapb
 
 import org.apache.spark.sql.{DataFrame, Encoder, SQLContext, SparkSession}
 
-import scala.reflect.ClassTag
-
 package object spark {
   implicit class ProtoSQLContext(val sqlContext: SQLContext) extends AnyVal {
     def protoToDataFrame[T <: GeneratedMessage: Encoder](

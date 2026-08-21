@@ -216,7 +216,7 @@ class PersonSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
       )
     )
 
-    val ds = df.select($"name", $"addresses".getItem(0))
+    val ds = TestCompatibilityHelpers.personGetItem(df)
 
     ds.as[(String, Option[Address])].collect() must contain theSameElementsAs (
       Seq(
