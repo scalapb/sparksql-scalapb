@@ -224,8 +224,6 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     )
   )
 
-ThisBuild / publishTo := sonatypePublishToBundle.value
-
 lazy val root =
   project
     .in(file("."))
