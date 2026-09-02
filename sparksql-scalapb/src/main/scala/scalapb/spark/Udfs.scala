@@ -1,14 +1,13 @@
 package scalapb.spark
 
-import org.apache.spark.sql.Column
-import frameless.TypedEncoder
-import frameless.TypedColumn
+import frameless.{TypedColumn, TypedEncoder}
 import frameless.functions.FramelessUdf
+import org.apache.spark.sql.Column
 
 trait Udfs {
   def udf[RT: TypedEncoder, A1: TypedEncoder](f: A1 => RT): Column => Column = { u1 =>
     val inputs = new TypedColumn[Any, A1](u1) :: Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -20,7 +19,7 @@ trait Udfs {
       new TypedColumn[Any, A1](u1) ::
         new TypedColumn[Any, A2](u2) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -38,7 +37,7 @@ trait Udfs {
         new TypedColumn[Any, A2](u2) ::
         new TypedColumn[Any, A3](u3) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -58,7 +57,7 @@ trait Udfs {
         new TypedColumn[Any, A3](u3) ::
         new TypedColumn[Any, A4](u4) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -80,7 +79,7 @@ trait Udfs {
         new TypedColumn[Any, A4](u4) ::
         new TypedColumn[Any, A5](u5) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -104,7 +103,7 @@ trait Udfs {
         new TypedColumn[Any, A5](u5) ::
         new TypedColumn[Any, A6](u6) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -131,7 +130,7 @@ trait Udfs {
           new TypedColumn[Any, A6](u6) ::
           new TypedColumn[Any, A7](u7) ::
           Nil
-      new Column(
+      SparkCompatibilityHelpers.getUdfColumn(
         FramelessUdf(f, inputs, TypedEncoder[RT])
       )
   }
@@ -168,7 +167,7 @@ trait Udfs {
         new TypedColumn[Any, A7](u7) ::
         new TypedColumn[Any, A8](u8) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -208,7 +207,7 @@ trait Udfs {
         new TypedColumn[Any, A8](u8) ::
         new TypedColumn[Any, A9](u9) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }
@@ -251,7 +250,7 @@ trait Udfs {
         new TypedColumn[Any, A9](u9) ::
         new TypedColumn[Any, A10](u10) ::
         Nil
-    new Column(
+    SparkCompatibilityHelpers.getUdfColumn(
       FramelessUdf(f, inputs, TypedEncoder[RT])
     )
   }

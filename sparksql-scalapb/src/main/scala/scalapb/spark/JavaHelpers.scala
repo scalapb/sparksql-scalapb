@@ -18,7 +18,7 @@ object JavaHelpers {
 
   def penumToString(value: PValue): UTF8String = {
     value match {
-      case PEmpty => null
+      case PEmpty   => null
       case PEnum(_) =>
         val ev = value.asInstanceOf[PEnum].value
         if (ev.isUnrecognized)
@@ -39,7 +39,7 @@ object JavaHelpers {
     val input = inputUtf8.toString
     cmp.fromName(input) match {
       case Some(r) => r.value
-      case None =>
+      case None    =>
         try {
           input.toInt
         } catch {
@@ -58,7 +58,7 @@ object JavaHelpers {
     val input = inputUtf8.toString
     cmp.fromName(input) match {
       case Some(r) => PEnum(r.asInstanceOf[GeneratedEnum].scalaValueDescriptor)
-      case None =>
+      case None    =>
         try {
           val enumValue = input.toInt
           PEnum(

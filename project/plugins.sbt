@@ -1,11 +1,11 @@
-addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.3.2")
 
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.12")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.1")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.8")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.10.0")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.12.2")
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.6")
 
-addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.2")
+addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.11.0")

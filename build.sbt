@@ -8,13 +8,19 @@ Global / concurrentRestrictions := Seq(
   Tags.limit(Tags.Test, 1)
 )
 
-val Scala212 = "2.12.18"
+val Scala212 = "2.12.21"
 
-val Scala213 = "2.13.12"
+val Scala213 = "2.13.18"
 
-lazy val Spark35 = Spark("3.5.0")
+lazy val Spark42 = Spark("4.2.0")
 
-lazy val Spark34 = Spark("3.4.2")
+lazy val Spark41 = Spark("4.1.3")
+
+lazy val Spark40 = Spark("4.0.4")
+
+lazy val Spark35 = Spark("3.5.9")
+
+lazy val Spark34 = Spark("3.4.4")
 
 lazy val Spark33 = Spark("3.3.4")
 
@@ -22,7 +28,7 @@ lazy val Spark32 = Spark("3.2.3")
 
 lazy val Spark31 = Spark("3.1.3")
 
-lazy val ScalaPB0_11 = ScalaPB("0.11.14")
+lazy val ScalaPB0_11 = ScalaPB("0.11.20")
 
 lazy val ScalaPB0_10 = ScalaPB("0.10.11")
 
@@ -55,8 +61,8 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.value.scalapbVersion % "protobuf",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "provided",
       "org.apache.spark" %% "spark-sql" % spark.value.sparkVersion % "test",
-      "org.scalatest" %% "scalatest" % "3.2.17" % "test",
-      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.17.0" % "test",
+      "org.scalatest" %% "scalatest" % "3.2.20" % "test",
+      "org.scalatestplus" %% "scalacheck-1-19" % "3.2.20.0" % "test",
       "com.github.alexarchambault" %% "scalacheck-shapeless_1.16" % "1.3.1" % "test"
     ),
     spark := {
@@ -83,6 +89,9 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     },
     framelessDatasetName := {
       spark.value match {
+        case Spark42                     => "frameless-dataset-spark42"
+        case Spark41                     => "frameless-dataset-spark41"
+        case Spark40                     => "frameless-dataset-spark40"
         case Spark35 | Spark34 | Spark33 => "frameless-dataset"
         case Spark32                     => "frameless-dataset-spark32"
         case Spark31                     => "frameless-dataset-spark31"
@@ -91,6 +100,7 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     },
     framelessDatasetVersion := {
       spark.value match {
+        case Spark40 | Spark41 | Spark42 => "0.17.0"
         case Spark35 | Spark34 | Spark33 => "0.16.0" // NPE in 3.4, 3.5 if older lib versions used
         case Spark32                     => "0.15.0" // Spark3.2 support dropped in ver > 0.15.0
         case Spark31                     => "0.14.0" // Spark3.1 support dropped in ver > 0.14.0
@@ -104,48 +114,114 @@ lazy val `sparksql-scalapb` = (projectMatrix in file("sparksql-scalapb"))
     Test / PB.targets := Seq(
       scalapbPlugin(scalapb.value.scalapbVersion) -> (Test / sourceManaged).value
     ),
+    Test / fork := true,
     Test / run / fork := true,
-    Test / javaOptions ++= Seq("-Xmx2G")
+    Test / javaOptions ++= Seq(
+      "-Xmx2G",
+      "-XX:+IgnoreUnrecognizedVMOptions",
+      "--add-opens=java.base/java.lang=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+      "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+      "--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
+      "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+      "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED"
+    )
+  )
+  .customRow(
+    scalaVersions = Seq(Scala213),
+    axisValues = Seq(Spark42, ScalaPB0_11, VirtualAxis.jvm),
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-4",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-4"
+    )
+  )
+  .customRow(
+    scalaVersions = Seq(Scala213),
+    axisValues = Seq(Spark41, ScalaPB0_11, VirtualAxis.jvm),
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-4",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-4"
+    )
+  )
+  .customRow(
+    scalaVersions = Seq(Scala213),
+    axisValues = Seq(Spark40, ScalaPB0_11, VirtualAxis.jvm),
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-4",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-4"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark35, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark34, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark33, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark32, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212),
     axisValues = Seq(Spark31, ScalaPB0_11, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark33, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212, Scala213),
     axisValues = Seq(Spark32, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
   .customRow(
     scalaVersions = Seq(Scala212),
     axisValues = Seq(Spark31, ScalaPB0_10, VirtualAxis.jvm),
-    settings = Seq()
+    settings = Seq(
+      Compile / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "main" / "spark-3",
+      Test / unmanagedSourceDirectories += (ThisBuild / baseDirectory).value / "sparksql-scalapb" / "src" / "test" / "spark-3"
+    )
   )
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
