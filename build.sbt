@@ -10,7 +10,7 @@ Global / concurrentRestrictions := Seq(
 
 val Scala212 = "2.12.21"
 
-val Scala213 = "2.13.18"
+val Scala213 = "3.9.0"
 
 lazy val Spark42 = Spark("4.2.0")
 
