@@ -14,7 +14,7 @@ val Scala213 = "2.13.18"
 
 lazy val Spark42 = Spark("4.2.0")
 
-lazy val Spark41 = Spark("4.1.3")
+lazy val Spark41 = Spark("4.1.4")
 
 lazy val Spark40 = Spark("4.0.4")
 
